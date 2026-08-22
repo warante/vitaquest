@@ -902,6 +902,65 @@ nav {
   font-weight: var(--weight-heavy);
   cursor: pointer;
 }
+.login-shell {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: var(--layout-mobile-pad);
+  background: var(--paper);
+}
+.login-card {
+  width: min(100%, 420px);
+  padding: clamp(2rem, 6vw, 3.5rem);
+  border: var(--border-thin) solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--card);
+}
+.login-card .brand-mark {
+  margin-bottom: var(--space-6);
+}
+.login-card h1 {
+  margin: 0.2rem 0 0;
+}
+.login-copy {
+  margin: var(--space-3) 0 var(--space-6);
+  color: var(--muted);
+}
+.login-card form {
+  display: grid;
+  gap: var(--space-3);
+}
+.login-card label {
+  font-size: var(--type-label);
+  font-weight: var(--weight-heavy);
+}
+.login-card input {
+  width: 100%;
+  border: var(--border-thin) solid var(--line-strong);
+  border-radius: var(--radius-button);
+  padding: 0.8rem 0.9rem;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+.login-card input:focus-visible {
+  outline: 3px solid var(--orange-soft);
+  outline-offset: 2px;
+}
+.login-button {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+.login-error {
+  margin: 0;
+  color: var(--orange-dark);
+  font-size: var(--type-caption);
+}
+.login-note {
+  display: block;
+  margin-top: var(--space-5);
+  color: var(--muted);
+}
 .primary-button:disabled {
   opacity: 0.65;
   cursor: wait;
