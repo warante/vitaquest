@@ -59,6 +59,14 @@ export function ProgressBar({ value }: Readonly<{ value: number }>): ReactNode {
   )
 }
 
+export function ExportButton({ onExport }: Readonly<{ onExport: () => void }>): ReactNode {
+  return (
+    <button className="export-button" type="button" onClick={onExport}>
+      Exportar resumen
+    </button>
+  )
+}
+
 export function CalendarStrip({
   days,
   selectedDate,

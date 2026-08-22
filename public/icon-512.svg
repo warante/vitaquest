@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="VitaQuest">
+  <title>VitaQuest</title>
+  <rect width="512" height="512" rx="112" fill="#2c8a68"/>
+  <path d="M120 152h75c80 0 144 45 144 104s-64 104-144 104h-75V152Zm75 149c43 0 72-18 72-45s-29-45-72-45h-19v90h19Z" fill="#f7f8f3"/>
+  <circle cx="381" cy="152" r="35" fill="#efad67"/>
+</svg>

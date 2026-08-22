@@ -16,16 +16,16 @@
 
 ## Fase 2: persistencia
 
-- [ ] Crear PostgreSQL en Railway.
+- [x] Crear PostgreSQL en Railway.
 - [x] Definir esquema Drizzle y migraciones.
 - [x] Preparar endpoints para guardar acciones, comidas, entrenamientos y analíticas.
 - [ ] Añadir autenticación antes de soportar más de un usuario.
 
 ## Fase 3: producto móvil
 
-- [ ] Convertir la aplicación en PWA.
-- [ ] Mejorar estados vacíos, accesibilidad y responsive.
-- [ ] Añadir exportación de datos.
+- [x] Convertir la aplicación en PWA.
+- [x] Mejorar estados vacíos, accesibilidad y responsive.
+- [x] Añadir exportación de datos.
 
 ## Fase 4: evolución
 

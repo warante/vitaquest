@@ -20,6 +20,10 @@ No se conecta PostgreSQL en el scaffold inicial. Primero se valida la experienci
 
 Se adopta Drizzle con PostgreSQL para guardar el perfil personal, acciones diarias, comidas, entrenamientos y analíticas. La primera instalación sigue siendo de un único perfil; la autenticación queda pendiente antes de abrir el producto a más usuarios. No se enlaza todavía un proyecto Railway porque falta confirmar el destino remoto.
 
+## 2026-08-22: producto móvil fase 3
+
+Se elige una PWA ligera, sin migrar a una aplicación nativa. El shell se puede instalar, cachea la superficie inicial y mantiene la interfaz útil sin conexión. La exportación empieza como JSON portable para no atar los datos a una herramienta externa.
+
 ## Cómo añadir una decisión
 
 Usa la fecha, el contexto, la decisión y el motivo. Si una decisión queda obsoleta, no la borres: añade una nueva entrada que la reemplace.
