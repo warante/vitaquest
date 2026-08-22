@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   title: "VitaQuest | Tu progreso, cada día",
   description: "Una forma amable de convertir tus objetivos de salud en acciones diarias.",
   icons: {
-    icon: "/icon-192.svg",
-    apple: "/icon-192.svg",
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
   },
 }
 
