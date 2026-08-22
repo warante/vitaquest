@@ -17,19 +17,19 @@ type EvolutionPanelProps = Readonly<{
   records: readonly DailyRecord[]
   summary: WeekSummary
   streakDays: number
+  currentDate: string
 }>
-
-const PROGRAM_START = "2026-08-17"
-const CURRENT_DATE = "2026-08-21"
 
 export function EvolutionPanel({
   records,
   summary,
   streakDays,
+  currentDate,
 }: EvolutionPanelProps): React.ReactElement {
   const [focus, setFocus] = useState<GoalFocus>(goalFocuses[0])
   const [reminders, setReminders] = useState<readonly Reminder[]>(defaultReminders)
-  const programWeek = getProgramWeek(PROGRAM_START, CURRENT_DATE)
+  const programStart = records[0]?.date ?? currentDate
+  const programWeek = getProgramWeek(programStart, currentDate)
   const goalProgress = getProgramProgress(summary)
   const achievements = useMemo(
     () => getAchievements(records, summary, streakDays),

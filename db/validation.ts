@@ -21,6 +21,23 @@ export const dailyRecordInputSchema = z.object({
   ),
 })
 
+export const dashboardCreateSchema = z.object({
+  recordDate: isoDateSchema,
+})
+
+export const dashboardUpdateSchema = z.object({
+  recordDate: isoDateSchema,
+  actions: z.array(
+    z.object({
+      slug: z.string().trim().min(1).max(80),
+      label: z.string().trim().min(1).max(120),
+      detail: z.string().trim().max(240),
+      icon: z.string().trim().max(8),
+      completed: z.boolean(),
+    }),
+  ),
+})
+
 export const mealInputSchema = z.object({
   profileId: profileIdSchema,
   mealDate: isoDateSchema,

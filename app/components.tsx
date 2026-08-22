@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 export type Action = Readonly<{
+  slug: string
   label: string
   detail: string
   icon: string
@@ -79,21 +80,24 @@ export function CalendarStrip({
   return (
     <section className="calendar-strip" aria-label="Calendario semanal">
       {days.map((day) => {
-        const completion = Math.round((day.completedActions / day.totalActions) * 100)
+        const hasRecord = day.totalActions > 0
+        const completion = hasRecord
+          ? Math.round((day.completedActions / day.totalActions) * 100)
+          : 0
         const isSelected = day.date === selectedDate
 
         return (
           <button
             className={isSelected ? "calendar-day selected" : "calendar-day"}
             type="button"
-            aria-label={`${day.label} ${day.number}: ${completion}% completado`}
+            aria-label={`${day.label} ${day.number}: ${hasRecord ? `${completion}% completado` : "sin registro"}`}
             aria-pressed={isSelected}
             key={day.date}
             onClick={() => onSelect(day.date)}
           >
             <span>{day.label}</span>
             <strong>{day.number}</strong>
-            <small>{completion}%</small>
+            <small>{hasRecord ? `${completion}%` : "—"}</small>
           </button>
         )
       })}
@@ -101,16 +105,14 @@ export function CalendarStrip({
   )
 }
 
-export function WeeklyBars(): ReactNode {
-  const activity = [
-    { label: "L", height: 58 },
-    { label: "M", height: 72 },
-    { label: "X", height: 48 },
-    { label: "J", height: 86 },
-    { label: "V", height: 64 },
-    { label: "S", height: 78 },
-    { label: "D", height: 38 },
-  ] as const
+export function WeeklyBars({ records }: Readonly<{ records: readonly CalendarDay[] }>): ReactNode {
+  const activity = records.map((record) => ({
+    label: record.label,
+    height:
+      record.totalActions === 0
+        ? 0
+        : Math.max(8, Math.round((record.completedActions / record.totalActions) * 100)),
+  }))
 
   return (
     <div className="bars" role="img" aria-label="Resumen de actividad de la semana">
@@ -121,5 +123,25 @@ export function WeeklyBars(): ReactNode {
         </div>
       ))}
     </div>
+  )
+}
+
+export function EmptyDayState({
+  onCreate,
+  loading,
+}: Readonly<{ onCreate: () => void; loading: boolean }>): ReactNode {
+  return (
+    <section className="empty-day" aria-live="polite">
+      <span className="empty-day-icon" aria-hidden="true">
+        ✦
+      </span>
+      <div>
+        <h3>Aún no tienes un día creado</h3>
+        <p>Empieza con un plan base editable. Nada se guarda hasta que tú lo decidas.</p>
+      </div>
+      <button className="primary-button" type="button" onClick={onCreate} disabled={loading}>
+        {loading ? "Creando…" : "Crear mi primer día"}
+      </button>
+    </section>
   )
 }
