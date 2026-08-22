@@ -14,19 +14,29 @@ export const runtime = "nodejs"
 
 const starterActions = [
   {
-    slug: "balanced-breakfast",
-    label: "Desayuno equilibrado",
-    detail: "Proteína + fruta",
-    icon: "🍳",
+    slug: "oatmeal-breakfast",
+    label: "Desayuno de avena",
+    detail: "Avena, leche de avena, nueces y fruta",
+    icon: "🥣",
   },
-  { slug: "daily-walk", label: "Caminar 30 minutos", detail: "Movimiento suave", icon: "🚶" },
+  {
+    slug: "daily-movement",
+    label: "Movimiento del día",
+    detail: "Fullbody, caminata o cardio según el plan",
+    icon: "🏋️",
+  },
   {
     slug: "drink-water",
     label: "Beber agua",
     detail: "Acercarte a tu objetivo de hidratación",
     icon: "💧",
   },
-  { slug: "light-dinner", label: "Cena ligera", detail: "Elegir una opción sencilla", icon: "🥗" },
+  {
+    slug: "mediterranean-meal",
+    label: "Comida mediterránea",
+    detail: "Verduras, proteína y grasa saludable",
+    icon: "🥗",
+  },
   {
     slug: "sleep-on-time",
     label: "Dormir a buena hora",
@@ -34,6 +44,13 @@ const starterActions = [
     icon: "🌙",
   },
 ] as const
+
+const profilePlan = {
+  goalSummary: "Mejorar salud metabólica y reducir el riesgo de esteatosis hepática",
+  breakfastPattern: "Tazón de avena con leche de avena, nueces y fruta troceada",
+  trainingPattern:
+    "Fullbody con empuje horizontal y vertical, tirón horizontal y vertical, piernas y gemelos; core y HIIT en días alternos",
+} as const
 
 function configuredProfileId(): string {
   // biome-ignore lint/complexity/useLiteralKeys: ProcessEnv requires indexed access in strict TypeScript.
@@ -70,9 +87,17 @@ async function ensureProfile(db: ReturnType<typeof getDatabase>, profileId: stri
   const displayName = process.env["VITAQUEST_DISPLAY_NAME"]?.trim() || "David"
   const [profile] = await db
     .insert(profiles)
-    .values({ id: profileId, displayName })
-    .onConflictDoUpdate({ target: profiles.id, set: { displayName, updatedAt: new Date() } })
-    .returning({ displayName: profiles.displayName })
+    .values({ id: profileId, displayName, ...profilePlan })
+    .onConflictDoUpdate({
+      target: profiles.id,
+      set: { displayName, ...profilePlan, updatedAt: new Date() },
+    })
+    .returning({
+      displayName: profiles.displayName,
+      goalSummary: profiles.goalSummary,
+      breakfastPattern: profiles.breakfastPattern,
+      trainingPattern: profiles.trainingPattern,
+    })
   if (!profile) {
     throw new Error("No se pudo preparar el perfil")
   }

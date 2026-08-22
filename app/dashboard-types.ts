@@ -15,7 +15,12 @@ export type DashboardDay = Readonly<{
 }>
 
 export type DashboardResponse = Readonly<{
-  profile: Readonly<{ displayName: string }>
+  profile: Readonly<{
+    displayName: string
+    goalSummary: string | null
+    breakfastPattern: string | null
+    trainingPattern: string | null
+  }>
   today: Readonly<{
     date: string
     actions: readonly DashboardAction[]

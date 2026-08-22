@@ -187,7 +187,10 @@ export default function Home(): React.ReactElement {
             <div>
               <Eyebrow>Tu misión de hoy</Eyebrow>
               <h3>Pequeños pasos. Cambios que se quedan.</h3>
-              <p>Completa tus acciones de hoy para sumar experiencia y mantener tu ritmo.</p>
+              <p>
+                {dashboard?.profile.goalSummary ??
+                  "Completa tus acciones de hoy para sumar experiencia y mantener tu ritmo."}
+              </p>
             </div>
             <div className="level-badge">
               <strong>Nivel 4</strong>

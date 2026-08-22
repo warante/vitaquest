@@ -13,6 +13,9 @@ import {
 export const profiles = pgTable("profiles", {
   id: uuid("id").defaultRandom().primaryKey(),
   displayName: text("display_name").notNull(),
+  goalSummary: text("goal_summary"),
+  breakfastPattern: text("breakfast_pattern"),
+  trainingPattern: text("training_pattern"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 })
