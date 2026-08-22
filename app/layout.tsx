@@ -6,6 +6,10 @@ import { PwaRegister } from "./pwa-register"
 export const metadata: Metadata = {
   title: "VitaQuest | Tu progreso, cada día",
   description: "Una forma amable de convertir tus objetivos de salud en acciones diarias.",
+  icons: {
+    icon: "/icon-192.svg",
+    apple: "/icon-192.svg",
+  },
 }
 
 export const viewport: Viewport = {
