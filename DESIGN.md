@@ -44,3 +44,9 @@ No external reference design was supplied for this first implementation. This fi
 - The 12-week route is compact and scannable: current week, target focus, adherence progress and numbered milestones.
 - Reminder controls are deliberately local and transparent; the interface says that scheduling is device-only until account-backed notifications exist.
 - Locked achievements remain visible with progress text so the product rewards the next useful action instead of hiding unfinished work.
+
+## Private access contract
+
+- `/login` is the only unauthenticated product screen; the dashboard and data APIs require the `vitaquest_session` cookie.
+- The access key is server-only in `VITAQUEST_ACCESS_KEY`; it must never appear in client code, URLs or repository files.
+- The login surface uses the existing paper, ink and green token system, with a clear error state and a 30-day device-session note.
