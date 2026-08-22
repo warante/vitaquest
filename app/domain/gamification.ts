@@ -39,7 +39,7 @@ export function calculateXp(
   streakDays: number,
 ): number {
   const actionXp = completedActions * XP_PER_ACTION
-  const fullDayBonus = completedActions === totalActions ? FULL_DAY_BONUS : 0
+  const fullDayBonus = totalActions > 0 && completedActions >= totalActions ? FULL_DAY_BONUS : 0
   return actionXp + fullDayBonus + streakDays * STREAK_XP_PER_DAY
 }
 
@@ -51,7 +51,11 @@ export function calculateStreak(records: readonly DailyRecord[], endDate: string
   while (true) {
     const date = new Date(cursor * DAY_MS).toISOString().slice(0, 10)
     const record = recordsByDate.get(date)
-    if (record === undefined || record.completedActions < record.totalActions) {
+    if (
+      record === undefined ||
+      record.totalActions <= 0 ||
+      record.completedActions < record.totalActions
+    ) {
       return streak
     }
     streak += 1

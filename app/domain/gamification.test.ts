@@ -31,6 +31,19 @@ describe("gamification rules", () => {
     expect(calculateStreak(streakRecords, "2026-08-19")).toBe(3)
   })
 
+  test("does not count empty calendar days as completed days", () => {
+    expect(
+      calculateStreak(
+        [
+          { date: "2026-08-21", completedActions: 0, totalActions: 0 },
+          { date: "2026-08-22", completedActions: 5, totalActions: 5 },
+        ],
+        "2026-08-22",
+      ),
+    ).toBe(1)
+    expect(calculateXp(0, 0, 0)).toBe(0)
+  })
+
   test("returns the badge tier for the current streak", () => {
     expect(getBadgeForStreak(0)).toEqual({ key: "beginner", label: "Primer paso", threshold: 0 })
     expect(getBadgeForStreak(12)).toEqual({ key: "steady", label: "Ritmo sostenido", threshold: 7 })
