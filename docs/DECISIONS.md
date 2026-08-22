@@ -24,6 +24,10 @@ Se adopta Drizzle con PostgreSQL para guardar el perfil personal, acciones diari
 
 Se elige una PWA ligera, sin migrar a una aplicación nativa. El shell se puede instalar, cachea la superficie inicial y mantiene la interfaz útil sin conexión. La exportación empieza como JSON portable para no atar los datos a una herramienta externa.
 
+## 2026-08-22: evolución fase 4
+
+Los recordatorios empiezan como preferencias locales porque todavía no hay identidad autenticada ni servicio de notificaciones. Los objetivos de 12 semanas y los logros se calculan desde la adherencia observable; más adelante se trasladarán a PostgreSQL cuando exista una cuenta de usuario.
+
 ## Cómo añadir una decisión
 
 Usa la fecha, el contexto, la decisión y el motivo. Si una decisión queda obsoleta, no la borres: añade una nueva entrada que la reemplace.

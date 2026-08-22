@@ -29,6 +29,6 @@
 
 ## Fase 4: evolución
 
-- [ ] Recordatorios configurables.
-- [ ] Objetivos por fases de 12 semanas.
-- [ ] Más logros y visualizaciones de progreso.
+- [x] Recordatorios configurables en el dispositivo.
+- [x] Objetivos por fases de 12 semanas.
+- [x] Más logros y visualizaciones de progreso.

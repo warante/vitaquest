@@ -18,6 +18,7 @@ import {
   getBadgeForStreak,
   summarizeWeek,
 } from "./domain/gamification"
+import { EvolutionPanel } from "./evolution-panel"
 
 const initialActions: readonly Action[] = [
   { label: "Desayuno equilibrado", detail: "Proteína + fruta", icon: "🍳", completed: true },
@@ -225,6 +226,7 @@ export default function Home(): React.ReactElement {
               />
             </article>
           </section>
+          <EvolutionPanel records={weekRecords} summary={weekSummary} streakDays={streakDays} />
         </section>
       </main>
     </>

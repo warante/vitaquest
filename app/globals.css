@@ -632,6 +632,220 @@ nav {
   border-color: var(--orange);
   background: var(--surface-warm);
 }
+.evolution-section {
+  margin-top: var(--space-section-margin-top);
+}
+.evolution-heading {
+  margin-top: 0;
+}
+.evolution-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--space-panel-gap);
+  margin-top: var(--space-action-margin);
+}
+.goal-panel {
+  background: var(--surface-soft);
+  border-color: var(--border-completed);
+}
+.goal-percent {
+  color: var(--green);
+  font-size: var(--type-panel-title);
+}
+.evolution-copy {
+  max-width: var(--measure-hero-body);
+  margin: var(--space-5) 0;
+  color: var(--muted);
+  font-size: var(--type-body);
+  line-height: var(--line-height-body);
+}
+.focus-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.focus-option {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-thin) solid var(--border-calendar);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast),
+    transform var(--motion-fast);
+}
+.focus-option:hover,
+.focus-option.selected {
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--white);
+}
+.focus-option:active {
+  transform: translateY(1px) scale(0.99);
+}
+.goal-track {
+  height: var(--size-progress);
+  margin-top: var(--space-5);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-track);
+}
+.goal-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+}
+.goal-steps {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+.goal-step {
+  display: grid;
+  min-height: 24px;
+  place-items: center;
+  border-radius: var(--space-1);
+  color: var(--muted);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-heavy);
+}
+.goal-step.reached {
+  background: var(--green);
+  color: var(--white);
+}
+.reminder-panel {
+  background: var(--surface-warm);
+  border-color: var(--border-xp);
+}
+.reminder-panel .trend {
+  color: var(--text-xp-accent);
+  font-size: var(--type-caption);
+  text-align: right;
+}
+.reminder-list {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+.reminder-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-thin) solid var(--border-xp);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+}
+.reminder-row span,
+.reminder-row strong,
+.reminder-row small {
+  display: block;
+}
+.reminder-row strong {
+  font-size: var(--type-label);
+}
+.reminder-row small {
+  margin-top: var(--space-1);
+  color: var(--muted);
+  font-size: var(--type-caption);
+}
+.reminder-row input[type="time"] {
+  min-width: 84px;
+  padding: var(--space-2);
+  border: var(--border-thin) solid var(--border-xp);
+  border-radius: var(--space-1);
+  background: var(--surface-warm);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--type-label);
+}
+.reminder-row input[type="time"]:disabled {
+  opacity: 0.45;
+}
+.reminder-toggle {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+.achievement-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-panel-gap);
+  margin-top: var(--space-panel-margin-top);
+  padding: 0;
+  list-style: none;
+}
+.achievement-card {
+  display: flex;
+  min-width: 0;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-thin) solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--card);
+  color: var(--muted);
+}
+.achievement-card.unlocked {
+  border-color: var(--border-completed);
+  background: var(--surface-completed);
+  color: var(--ink);
+}
+.achievement-mark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--radius-circle);
+  background: var(--surface-track);
+  color: var(--muted);
+  font-weight: var(--weight-heavy);
+}
+.achievement-card.unlocked .achievement-mark {
+  background: var(--green);
+  color: var(--white);
+}
+.achievement-card strong,
+.achievement-card p,
+.achievement-card small {
+  display: block;
+}
+.achievement-card strong {
+  font-size: var(--type-label);
+}
+.achievement-card p {
+  margin: var(--space-2) 0;
+  font-size: var(--type-caption);
+  line-height: var(--line-height-body);
+}
+.achievement-card small {
+  font-size: var(--type-caption);
+  font-weight: var(--weight-heavy);
+}
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -639,7 +853,8 @@ nav {
   .nav-item,
   .action-card,
   .calendar-day,
-  .export-button {
+  .export-button,
+  .focus-option {
     transition: none;
   }
 }
@@ -705,7 +920,13 @@ nav {
     align-self: flex-start;
   }
   .action-list,
-  .lower-grid {
+  .lower-grid,
+  .evolution-grid,
+  .achievement-list {
     grid-template-columns: 1fr;
+  }
+  .reminder-panel .trend {
+    align-self: flex-start;
+    text-align: left;
   }
 }

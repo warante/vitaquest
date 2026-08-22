@@ -42,15 +42,17 @@ try {
     throw new Error("Export filename is not date-specific")
   }
 
-  console.log(JSON.stringify({
-    manifestDisplay: manifest.display,
-    serviceWorkerStatus: serviceWorkerResponse.status(),
-    selectedBefore,
-    selectedAfter,
-    summaryBefore,
-    summaryAfter,
-    exportFilename: download.suggestedFilename(),
-  }))
+  console.log(
+    JSON.stringify({
+      manifestDisplay: manifest.display,
+      serviceWorkerStatus: serviceWorkerResponse.status(),
+      selectedBefore,
+      selectedAfter,
+      summaryBefore,
+      summaryAfter,
+      exportFilename: download.suggestedFilename(),
+    }),
+  )
 } finally {
   await browser.close()
 }

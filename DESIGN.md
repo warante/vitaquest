@@ -37,3 +37,10 @@ No external reference design was supplied for this first implementation. This fi
 - A visible keyboard skip link jumps directly to the main content; interactive controls expose focus rings, pressed states and reduced-motion behavior.
 - The reward panel owns the first export action: it downloads a date-stamped JSON snapshot of the current actions, XP, streak and weekly summary.
 - Mobile keeps navigation horizontally scrollable and stacks panels without introducing horizontal page overflow.
+
+## Fase 4 contract
+
+- Evolution panels use green for active progress, warm cream for personal controls and muted cards for locked achievements.
+- The 12-week route is compact and scannable: current week, target focus, adherence progress and numbered milestones.
+- Reminder controls are deliberately local and transparent; the interface says that scheduling is device-only until account-backed notifications exist.
+- Locked achievements remain visible with progress text so the product rewards the next useful action instead of hiding unfinished work.
