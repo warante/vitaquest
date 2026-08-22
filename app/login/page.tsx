@@ -1,8 +1,10 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function LoginPage(): React.ReactElement {
+  const router = useRouter()
   const [accessKey, setAccessKey] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -22,7 +24,7 @@ export default function LoginPage(): React.ReactElement {
         return
       }
       const next = new URLSearchParams(window.location.search).get("next") ?? "/"
-      window.location.assign(next.startsWith("/") ? next : "/")
+      router.replace(next.startsWith("/") ? next : "/")
     } catch {
       setError("No se pudo conectar. Inténtalo de nuevo.")
     } finally {
