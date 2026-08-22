@@ -37,7 +37,7 @@ export default function LoginPage(): React.ReactElement {
         <p className="eyebrow">Tu espacio privado</p>
         <h1 id="login-title">VitaQuest</h1>
         <p className="login-copy">Introduce tu clave para continuar con tu progreso.</p>
-        <form onSubmit={(event) => void submit(event)}>
+        <form method="post" onSubmit={(event) => void submit(event)}>
           <label htmlFor="access-key">Clave de acceso</label>
           <input
             id="access-key"
