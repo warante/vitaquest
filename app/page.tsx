@@ -14,7 +14,7 @@ import {
 import type { DashboardResponse } from "./dashboard-types"
 import { createExportJson } from "./domain/export"
 import {
-  calculateStreak,
+  calculateCurrentStreak,
   calculateXp,
   getBadgeForStreak,
   summarizeWeek,
@@ -39,6 +39,7 @@ export default function Home(): React.ReactElement {
   const [error, setError] = useState("")
   const actions: readonly Action[] = dashboard?.today.actions ?? []
   const weekRecords = dashboard?.week ?? []
+  const historyRecords = dashboard?.history ?? []
   const todayDate = dashboard?.today.date ?? ""
   const completedCount = useMemo(
     () => actions.filter((action) => action.completed).length,
@@ -47,8 +48,8 @@ export default function Home(): React.ReactElement {
   const progress = actions.length === 0 ? 0 : Math.round((completedCount / actions.length) * 100)
   const weekSummary = useMemo(() => summarizeWeek(weekRecords), [weekRecords])
   const streakDays = useMemo(
-    () => (selectedDate || todayDate ? calculateStreak(weekRecords, selectedDate || todayDate) : 0),
-    [selectedDate, todayDate, weekRecords],
+    () => (todayDate ? calculateCurrentStreak(historyRecords, todayDate) : 0),
+    [historyRecords, todayDate],
   )
   const xp = calculateXp(completedCount, actions.length, streakDays)
   const badge = getBadgeForStreak(streakDays)
@@ -295,7 +296,7 @@ export default function Home(): React.ReactElement {
           </section>
           {dashboard ? (
             <EvolutionPanel
-              records={weekRecords}
+              records={historyRecords}
               summary={weekSummary}
               streakDays={streakDays}
               currentDate={todayDate}

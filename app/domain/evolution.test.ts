@@ -35,4 +35,23 @@ describe("phase four evolution rules", () => {
         .map((achievement) => achievement.key),
     ).toEqual(["streak", "consistent"])
   })
+
+  test("unlocks first-week from registered days, not from padded calendar days", () => {
+    const registered = Array.from({ length: 7 }, (_, index) => ({
+      date: `2026-08-${String(10 + index).padStart(2, "0")}`,
+      completedActions: 0,
+      totalActions: 3,
+    }))
+    const achievements = getAchievements(
+      registered,
+      { averageCompletion: 0, completedActions: 0, totalActions: 21, bestDate: "" },
+      0,
+    )
+    expect(achievements.find((achievement) => achievement.key === "first-week")?.unlocked).toBe(
+      true,
+    )
+    expect(achievements.find((achievement) => achievement.key === "full-week")?.unlocked).toBe(
+      false,
+    )
+  })
 })

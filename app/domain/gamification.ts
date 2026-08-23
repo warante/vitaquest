@@ -33,6 +33,10 @@ function toDayNumber(date: string): number {
   return Date.parse(`${date}T00:00:00Z`) / DAY_MS
 }
 
+function toDateString(dayNumber: number): string {
+  return new Date(dayNumber * DAY_MS).toISOString().slice(0, 10)
+}
+
 export function calculateXp(
   completedActions: number,
   totalActions: number,
@@ -49,7 +53,7 @@ export function calculateStreak(records: readonly DailyRecord[], endDate: string
   let cursor = toDayNumber(endDate)
 
   while (true) {
-    const date = new Date(cursor * DAY_MS).toISOString().slice(0, 10)
+    const date = toDateString(cursor)
     const record = recordsByDate.get(date)
     if (
       record === undefined ||
@@ -61,6 +65,33 @@ export function calculateStreak(records: readonly DailyRecord[], endDate: string
     streak += 1
     cursor -= 1
   }
+}
+
+export function calculateCurrentStreak(records: readonly DailyRecord[], today: string): number {
+  const recordsByDate = new Map(records.map((record) => [record.date, record]))
+  const isComplete = (date: string): boolean => {
+    const record = recordsByDate.get(date)
+    return (
+      record !== undefined &&
+      record.totalActions > 0 &&
+      record.completedActions >= record.totalActions
+    )
+  }
+
+  let cursor = toDayNumber(today)
+  if (!isComplete(toDateString(cursor))) {
+    cursor -= 1
+    if (!isComplete(toDateString(cursor))) {
+      return 0
+    }
+  }
+
+  let streak = 0
+  while (isComplete(toDateString(cursor))) {
+    streak += 1
+    cursor -= 1
+  }
+  return streak
 }
 
 export function getBadgeForStreak(streakDays: number): Badge {
