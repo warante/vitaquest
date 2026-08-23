@@ -43,6 +43,7 @@ export function getAchievements(
   summary: WeekSummary,
   streakDays: number,
 ): readonly Achievement[] {
+  const registeredDays = records.filter((record) => record.totalActions > 0).length
   const completedDays = records.filter(
     (record) => record.completedActions >= record.totalActions && record.totalActions > 0,
   ).length
@@ -51,8 +52,8 @@ export function getAchievements(
       key: "first-week",
       label: "Primera semana",
       detail: "Registra siete días de contexto.",
-      unlocked: records.length >= 7,
-      progress: `${Math.min(records.length, 7)} / 7 días`,
+      unlocked: registeredDays >= 7,
+      progress: `${Math.min(registeredDays, 7)} / 7 días`,
     },
     {
       key: "streak",
@@ -73,7 +74,7 @@ export function getAchievements(
       label: "Semana completa",
       detail: "Completa todos los días de la semana.",
       unlocked: completedDays >= 7,
-      progress: `${completedDays} / 7 días`,
+      progress: `${Math.min(completedDays, 7)} / 7 días`,
     },
   ]
 }

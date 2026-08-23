@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, lte } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { DatabaseConfigurationError, getDatabase } from "../../../db/client"
 import { dailyActions, dailyRecords, profiles } from "../../../db/schema"
@@ -42,6 +42,78 @@ const starterActions = [
     label: "Dormir a buena hora",
     detail: "Preparar el descanso",
     icon: "🌙",
+  },
+  {
+    slug: "post-meal-walk",
+    label: "Caminar después de comer",
+    detail: "Caminar de 10 a 15 minutos después de comer",
+    icon: "🚶",
+  },
+  {
+    slug: "eat-fruit",
+    label: "Comer fruta",
+    detail: "Comer de 2 a 3 piezas de fruta al día",
+    icon: "🍎",
+  },
+  {
+    slug: "walk-8000-steps",
+    label: "Caminata",
+    detail: "Caminar 8000 pasos o más",
+    icon: "👟",
+  },
+  {
+    slug: "stretch-5-min",
+    label: "Estirar 5 minutos",
+    detail: "Movilidad o estiramientos suaves al final del día",
+    icon: "🧘",
+  },
+  {
+    slug: "active-break",
+    label: "Pausa activa",
+    detail: "Levantarse y moverse 2-3 minutos cada hora de estar sentado",
+    icon: "🧍",
+  },
+  {
+    slug: "veggie-serving",
+    label: "Ración de verdura",
+    detail: "Incluir verdura en las dos comidas principales",
+    icon: "🥦",
+  },
+  {
+    slug: "protein-every-meal",
+    label: "Proteína en cada comida",
+    detail: "Asegurar una fuente de proteína en desayuno, comida y cena",
+    icon: "🍗",
+  },
+  {
+    slug: "no-ultraprocessed",
+    label: "Sin ultraprocesados hoy",
+    detail: "Evitar snacks y refrescos procesados",
+    icon: "🚫",
+  },
+  {
+    slug: "light-early-dinner",
+    label: "Cenar ligero y temprano",
+    detail: "Última comida 2-3 horas antes de acostarse",
+    icon: "🍽️",
+  },
+  {
+    slug: "nuts-snack",
+    label: "Almendras o frutos secos",
+    detail: "Un puñado pequeño como snack saludable",
+    icon: "🥜",
+  },
+  {
+    slug: "take-stairs",
+    label: "Escaleras en vez de ascensor",
+    detail: "Subir por escaleras en vez de ascensor",
+    icon: "🪜",
+  },
+  {
+    slug: "reduce-sugar",
+    label: "Reducir azúcar",
+    detail: "Evitar azúcares añadidos durante el día",
+    icon: "🍬",
   },
 ] as const
 
@@ -130,18 +202,13 @@ async function readDashboard() {
     ensureProfile(db, profileId),
     db
       .select({
+        id: dailyRecords.id,
         date: dailyRecords.recordDate,
         completedActions: dailyRecords.completedActions,
         totalActions: dailyRecords.totalActions,
       })
       .from(dailyRecords)
-      .where(
-        and(
-          eq(dailyRecords.profileId, profileId),
-          gte(dailyRecords.recordDate, dates[0] ?? date),
-          lte(dailyRecords.recordDate, dates.at(-1) ?? date),
-        ),
-      )
+      .where(eq(dailyRecords.profileId, profileId))
       .orderBy(asc(dailyRecords.recordDate)),
   ])
   const todayRecord = records.find((record) => record.date === date)
@@ -155,22 +222,18 @@ async function readDashboard() {
           completed: dailyActions.completed,
         })
         .from(dailyActions)
-        .where(
-          eq(
-            dailyActions.recordId,
-            (
-              await db
-                .select({ id: dailyRecords.id })
-                .from(dailyRecords)
-                .where(
-                  and(eq(dailyRecords.profileId, profileId), eq(dailyRecords.recordDate, date)),
-                )
-                .limit(1)
-            )[0]?.id ?? "00000000-0000-0000-0000-000000000000",
-          ),
-        )
+        .where(eq(dailyActions.recordId, todayRecord.id))
     : []
-  return { profile, today: { date, actions }, week: serializeWeek(records, dates) }
+  return {
+    profile,
+    today: { date, actions },
+    week: serializeWeek(records, dates),
+    history: records.map(({ date, completedActions, totalActions }) => ({
+      date,
+      completedActions,
+      totalActions,
+    })),
+  }
 }
 
 export async function GET(): Promise<NextResponse> {

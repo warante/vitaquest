@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import {
+  calculateCurrentStreak,
   calculateStreak,
   calculateXp,
   type DailyRecord,
@@ -42,6 +43,33 @@ describe("gamification rules", () => {
       ),
     ).toBe(1)
     expect(calculateXp(0, 0, 0)).toBe(0)
+  })
+
+  test("keeps the live streak alive when today is not completed yet", () => {
+    const records = [
+      { date: "2026-08-19", completedActions: 5, totalActions: 5 },
+      { date: "2026-08-20", completedActions: 5, totalActions: 5 },
+    ]
+    expect(calculateCurrentStreak(records, "2026-08-21")).toBe(2)
+    expect(calculateCurrentStreak(records, "2026-08-20")).toBe(2)
+  })
+
+  test("counts a single completed day as a one-day streak", () => {
+    expect(
+      calculateCurrentStreak(
+        [{ date: "2026-08-20", completedActions: 5, totalActions: 5 }],
+        "2026-08-21",
+      ),
+    ).toBe(1)
+  })
+
+  test("returns zero when the last completed day is older than yesterday", () => {
+    expect(
+      calculateCurrentStreak(
+        [{ date: "2026-08-18", completedActions: 5, totalActions: 5 }],
+        "2026-08-21",
+      ),
+    ).toBe(0)
   })
 
   test("returns the badge tier for the current streak", () => {

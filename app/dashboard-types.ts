@@ -14,6 +14,12 @@ export type DashboardDay = Readonly<{
   totalActions: number
 }>
 
+export type DashboardHistoryEntry = Readonly<{
+  date: string
+  completedActions: number
+  totalActions: number
+}>
+
 export type DashboardResponse = Readonly<{
   profile: Readonly<{
     displayName: string
@@ -26,4 +32,5 @@ export type DashboardResponse = Readonly<{
     actions: readonly DashboardAction[]
   }>
   week: readonly DashboardDay[]
+  history: readonly DashboardHistoryEntry[]
 }>
