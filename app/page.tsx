@@ -145,6 +145,46 @@ function workoutBadgeClass(type: string): string {
   return "recovery"
 }
 
+const RING_SIZE = 96
+const RING_STROKE = 8
+const RING_RADIUS = RING_SIZE / 2 - RING_STROKE
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
+
+function ProgressRing({
+  percent,
+  label,
+}: {
+  percent: number
+  label: string
+}): React.ReactElement {
+  const offset = RING_CIRCUMFERENCE - (percent / 100) * RING_CIRCUMFERENCE
+  return (
+    <div className="progress-ring">
+      <svg
+        width={RING_SIZE}
+        height={RING_SIZE}
+        role="img"
+        aria-label={`${label}: ${percent}%`}
+      >
+        <title>{`${label}: ${percent}%`}</title>
+        <circle className="progress-ring-bg" cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} />
+        <circle
+          className="progress-ring-fill"
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          strokeDasharray={RING_CIRCUMFERENCE}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="progress-ring-text">
+        <div className="progress-ring-percent">{percent}%</div>
+        <div className="progress-ring-label">{label}</div>
+      </div>
+    </div>
+  )
+}
+
 export default function Home(): React.ReactElement {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -224,6 +264,7 @@ export default function Home(): React.ReactElement {
   )
   const progress = actions.length === 0 ? 0 : Math.round((completedCount / actions.length) * 100)
   const weekSummary = useMemo(() => summarizeWeek(weekRecords), [weekRecords])
+  const weekProgress = weekSummary.averageCompletion
   const streakDays = useMemo(
     () => (todayDate ? calculateCurrentStreak(historyRecords, todayDate) : 0),
     [historyRecords, todayDate],
@@ -1093,9 +1134,6 @@ export default function Home(): React.ReactElement {
     URL.revokeObjectURL(url)
   }
 
-  const circumference = 2 * Math.PI * 52
-  const strokeDashoffset = circumference - (progress / 100) * circumference
-
   return (
     <>
       <a className="skip-link" href="#main-content">
@@ -1123,28 +1161,9 @@ export default function Home(): React.ReactElement {
           </div>
 
           <div className="progress-ring-container">
-            <div className="progress-ring">
-              <svg
-                width="120"
-                height="120"
-                role="img"
-                aria-label={`Progreso semanal: ${progress}%`}
-              >
-                <title>{`Progreso semanal: ${progress}%`}</title>
-                <circle className="progress-ring-bg" cx="60" cy="60" r="52" />
-                <circle
-                  className="progress-ring-fill"
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                />
-              </svg>
-              <div className="progress-ring-text">
-                <div className="progress-ring-percent">{progress}%</div>
-                <div className="progress-ring-label">semana completada</div>
-              </div>
+            <div className="progress-rings">
+              <ProgressRing percent={progress} label="hoy" />
+              <ProgressRing percent={weekProgress} label="semana" />
             </div>
             <div className="xp-info">
               <strong>

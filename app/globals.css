@@ -273,10 +273,17 @@ a {
   gap: var(--space-3);
 }
 
+.progress-rings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
 .progress-ring {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
 }
 
 .progress-ring svg {
@@ -306,14 +313,14 @@ a {
 }
 
 .progress-ring-percent {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: var(--weight-heavy);
   color: var(--text-primary);
   line-height: 1;
 }
 
 .progress-ring-label {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-secondary);
   margin-top: var(--space-1);
   text-transform: uppercase;
