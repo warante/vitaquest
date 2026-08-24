@@ -9,10 +9,8 @@ export const runtime = "nodejs"
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const input = workoutInputSchema.parse(await request.json())
-    const [workout] = await getDatabase()
-      .insert(workouts)
-      .values(input)
-      .returning({ id: workouts.id })
+    const db = await getDatabase()
+    const [workout] = await db.insert(workouts).values(input).returning({ id: workouts.id })
     return NextResponse.json(workout, { status: 201 })
   } catch (error) {
     if (error instanceof DatabaseConfigurationError) {
@@ -32,7 +30,8 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const rows = await getDatabase()
+    const db = await getDatabase()
+    const rows = await db
       .select()
       .from(workouts)
       .where(eq(workouts.profileId, profileId))

@@ -9,9 +9,10 @@ export const runtime = "nodejs"
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const input = labInputSchema.parse(await request.json())
-    const [lab] = await getDatabase()
+    const db = await getDatabase()
+    const [lab] = await db
       .insert(labRecords)
-      .values({ ...input, value: String(input.value) })
+      .values({ ...input, value: input.value })
       .returning({ id: labRecords.id })
     return NextResponse.json(lab, { status: 201 })
   } catch (error) {
@@ -32,7 +33,8 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const rows = await getDatabase()
+    const db = await getDatabase()
+    const rows = await db
       .select()
       .from(labRecords)
       .where(eq(labRecords.profileId, profileId))

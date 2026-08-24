@@ -1,14 +1,25 @@
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, inArray } from "drizzle-orm"
 import { NextResponse } from "next/server"
-import { DatabaseConfigurationError, getDatabase } from "../../../db/client"
-import { dailyActions, dailyRecords, profiles } from "../../../db/schema"
+import { type AppDatabase, DatabaseConfigurationError, getDatabase } from "../../../db/client"
+import { configuredProfileId } from "../../../db/config"
 import {
-  dashboardCreateSchema,
-  dashboardUpdateSchema,
-  profileIdSchema,
-} from "../../../db/validation"
-import type { DashboardDay } from "../../dashboard-types"
+  challenges,
+  dailyActions,
+  dailyRecords,
+  labRecords,
+  meals,
+  profiles,
+  trainingSessions,
+} from "../../../db/schema"
+import { dashboardCreateSchema, dashboardUpdateSchema } from "../../../db/validation"
+import type { DashboardDay, DayDetail } from "../../dashboard-types"
+import {
+  computeCategoryStreaks,
+  FIBER_ACTION_SLUGS,
+  STEPS_ACTION_SLUGS,
+} from "../../domain/category-streaks"
 import { calculateStreak, calculateXp, type DailyRecord } from "../../domain/gamification"
+import { summarizeMetrics } from "../../domain/metabolic-markers"
 
 export const runtime = "nodejs"
 
@@ -54,6 +65,12 @@ const starterActions = [
     label: "Comer fruta",
     detail: "Comer de 2 a 3 piezas de fruta al día",
     icon: "🍎",
+  },
+  {
+    slug: "fiber-30g",
+    label: "Fibra cerca de 30 g",
+    detail: "Legumbres, avena, fruta, verdura, integrales y frutos secos",
+    icon: "🌾",
   },
   {
     slug: "walk-8000-steps",
@@ -124,15 +141,6 @@ const profilePlan = {
     "Fullbody con empuje horizontal y vertical, tirón horizontal y vertical, piernas y gemelos; core y HIIT en días alternos",
 } as const
 
-function configuredProfileId(): string {
-  // biome-ignore lint/complexity/useLiteralKeys: ProcessEnv requires indexed access in strict TypeScript.
-  const result = profileIdSchema.safeParse(process.env["VITAQUEST_PROFILE_ID"])
-  if (!result.success) {
-    throw new Error("VITAQUEST_PROFILE_ID no está configurado correctamente")
-  }
-  return result.data
-}
-
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10)
 }
@@ -154,7 +162,7 @@ function calendarLabel(date: string): Readonly<{ label: string; number: string }
   return { label: labels[value.getUTCDay()] ?? "", number: date.slice(-2) }
 }
 
-async function ensureProfile(db: ReturnType<typeof getDatabase>, profileId: string) {
+async function ensureProfile(db: AppDatabase, profileId: string) {
   // biome-ignore lint/complexity/useLiteralKeys: ProcessEnv requires indexed access in strict TypeScript.
   const displayName = process.env["VITAQUEST_DISPLAY_NAME"]?.trim() || "David"
   const [profile] = await db
@@ -169,6 +177,11 @@ async function ensureProfile(db: ReturnType<typeof getDatabase>, profileId: stri
       goalSummary: profiles.goalSummary,
       breakfastPattern: profiles.breakfastPattern,
       trainingPattern: profiles.trainingPattern,
+      stepsGoal: profiles.stepsGoal,
+      fiberGoal: profiles.fiberGoal,
+      strengthGoal: profiles.strengthGoal,
+      cardioGoal: profiles.cardioGoal,
+      walksGoal: profiles.walksGoal,
     })
   if (!profile) {
     throw new Error("No se pudo preparar el perfil")
@@ -195,44 +208,140 @@ function serializeWeek(
 
 async function readDashboard() {
   const profileId = configuredProfileId()
-  const db = getDatabase()
+  const db = await getDatabase()
   const date = todayIsoDate()
   const dates = weekDates(date)
-  const [profile, records] = await Promise.all([
-    ensureProfile(db, profileId),
+  const [profile, records, labRows, completedChallenges, completedActionRows, trainingRows] =
+    await Promise.all([
+      ensureProfile(db, profileId),
+      db
+        .select({
+          id: dailyRecords.id,
+          date: dailyRecords.recordDate,
+          completedActions: dailyRecords.completedActions,
+          totalActions: dailyRecords.totalActions,
+          xp: dailyRecords.xp,
+        })
+        .from(dailyRecords)
+        .where(eq(dailyRecords.profileId, profileId))
+        .orderBy(asc(dailyRecords.recordDate)),
+      db
+        .select({
+          marker: labRecords.marker,
+          value: labRecords.value,
+          date: labRecords.measuredAt,
+        })
+        .from(labRecords)
+        .where(eq(labRecords.profileId, profileId))
+        .orderBy(asc(labRecords.measuredAt)),
+      db
+        .select({ id: challenges.id })
+        .from(challenges)
+        .where(and(eq(challenges.profileId, profileId), eq(challenges.completed, true))),
+      db
+        .select({ date: dailyRecords.recordDate, slug: dailyActions.slug })
+        .from(dailyActions)
+        .innerJoin(dailyRecords, eq(dailyActions.recordId, dailyRecords.id))
+        .where(and(eq(dailyRecords.profileId, profileId), eq(dailyActions.completed, true))),
+      db
+        .select({
+          sessionDate: trainingSessions.sessionDate,
+          workoutType: trainingSessions.workoutType,
+        })
+        .from(trainingSessions)
+        .where(eq(trainingSessions.profileId, profileId)),
+    ])
+  const weekRecords = records.filter((record) => dates.includes(record.date))
+  const weekRecordIds = weekRecords.map((record) => record.id)
+  const [weekActions, weekMeals] = await Promise.all([
+    weekRecordIds.length > 0
+      ? db
+          .select({
+            recordId: dailyActions.recordId,
+            slug: dailyActions.slug,
+            label: dailyActions.label,
+            detail: dailyActions.detail,
+            icon: dailyActions.icon,
+            completed: dailyActions.completed,
+          })
+          .from(dailyActions)
+          .where(inArray(dailyActions.recordId, weekRecordIds))
+      : [],
     db
       .select({
-        id: dailyRecords.id,
-        date: dailyRecords.recordDate,
-        completedActions: dailyRecords.completedActions,
-        totalActions: dailyRecords.totalActions,
+        mealDate: meals.mealDate,
+        mealType: meals.mealType,
+        name: meals.name,
       })
-      .from(dailyRecords)
-      .where(eq(dailyRecords.profileId, profileId))
-      .orderBy(asc(dailyRecords.recordDate)),
+      .from(meals)
+      .where(and(eq(meals.profileId, profileId), inArray(meals.mealDate, dates))),
   ])
-  const todayRecord = records.find((record) => record.date === date)
-  const actions = todayRecord
-    ? await db
-        .select({
-          slug: dailyActions.slug,
-          label: dailyActions.label,
-          detail: dailyActions.detail,
-          icon: dailyActions.icon,
-          completed: dailyActions.completed,
-        })
-        .from(dailyActions)
-        .where(eq(dailyActions.recordId, todayRecord.id))
-    : []
+  const recordIdByDate = new Map(weekRecords.map((record) => [record.date, record.id]))
+  const days: Record<string, DayDetail> = {}
+  for (const day of dates) {
+    const recordId = recordIdByDate.get(day)
+    days[day] = {
+      actions: recordId
+        ? weekActions
+            .filter((action) => action.recordId === recordId)
+            .map(({ slug, label, detail, icon, completed }) => ({
+              slug,
+              label,
+              detail,
+              icon,
+              completed,
+            }))
+        : [],
+      meals: weekMeals
+        .filter((meal) => meal.mealDate === day)
+        .map(({ mealType, name }) => ({ mealType, name })),
+    }
+  }
+  const stepsDates = new Set(
+    completedActionRows.filter((row) => STEPS_ACTION_SLUGS.has(row.slug)).map((row) => row.date),
+  )
+  const fiberDates = new Set(
+    completedActionRows.filter((row) => FIBER_ACTION_SLUGS.has(row.slug)).map((row) => row.date),
+  )
+  const strengthSessionDates = trainingRows
+    .filter((row) => row.workoutType.startsWith("fuerza"))
+    .map((row) => row.sessionDate)
+  const categoryStreaks = computeCategoryStreaks({
+    stepsDates,
+    fiberDates,
+    strengthSessionDates,
+    strengthGoal: profile.strengthGoal,
+    today: date,
+  })
+
   return {
-    profile,
-    today: { date, actions },
+    profile: {
+      displayName: profile.displayName,
+      goalSummary: profile.goalSummary,
+      breakfastPattern: profile.breakfastPattern,
+      trainingPattern: profile.trainingPattern,
+      goals: {
+        stepsGoal: profile.stepsGoal,
+        fiberGoal: profile.fiberGoal,
+        strengthGoal: profile.strengthGoal,
+        cardioGoal: profile.cardioGoal,
+        walksGoal: profile.walksGoal,
+      },
+    },
+    today: { date },
+    days,
     week: serializeWeek(records, dates),
     history: records.map(({ date, completedActions, totalActions }) => ({
       date,
       completedActions,
       totalActions,
     })),
+    metrics: summarizeMetrics(
+      labRows.map((row) => ({ marker: row.marker, value: row.value, date: row.date })),
+    ),
+    categoryStreaks,
+    totalXp:
+      records.reduce((total, record) => total + record.xp, 0) + completedChallenges.length * 40,
   }
 }
 
@@ -251,7 +360,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     const { recordDate } = dashboardCreateSchema.parse(await request.json())
     const profileId = configuredProfileId()
-    const db = getDatabase()
+    const db = await getDatabase()
     await ensureProfile(db, profileId)
     await db.transaction(async (transaction) => {
       const [record] = await transaction
@@ -288,7 +397,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
   try {
     const input = dashboardUpdateSchema.parse(await request.json())
     const profileId = configuredProfileId()
-    const db = getDatabase()
+    const db = await getDatabase()
     await ensureProfile(db, profileId)
     await db.transaction(async (transaction) => {
       const existing = await transaction

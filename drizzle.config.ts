@@ -1,12 +1,10 @@
-import { defineConfig } from "drizzle-kit"
+import type { Config } from "drizzle-kit"
 
-const { DATABASE_URL } = process.env
-
-export default defineConfig({
+export default {
   schema: "./db/schema.ts",
   out: "./drizzle",
-  dialect: "postgresql",
+  dialect: "sqlite",
   dbCredentials: {
-    url: DATABASE_URL ?? "postgresql://localhost/vitaquest",
+    url: "./vitaquest.db",
   },
-})
+} satisfies Config

@@ -1,19 +1,26 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1787385426804,
-      "tag": "0000_overrated_liz_osborn",
+      "version": "6",
+      "when": 1787506146607,
+      "tag": "0000_vengeful_namora",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "7",
-      "when": 1787393050211,
-      "tag": "0001_dashing_anita_blake",
+      "version": "6",
+      "when": 1787507472519,
+      "tag": "0001_old_killer_shrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787512378828,
+      "tag": "0002_salty_rhino",
       "breakpoints": true
     }
   ]

@@ -10,6 +10,10 @@ describe("export summary", () => {
         streakDays: 4,
         actions: [{ label: "Caminar", completed: true }],
         week: [{ date: "2026-08-22", completedActions: 1, totalActions: 5 }],
+        metrics: [
+          { label: "Triglicéridos", unit: "mg/dL", history: [{ date: "2026-08-01", value: 169 }] },
+        ],
+        training: [],
       },
       "2026-08-22T10:00:00.000Z",
     )

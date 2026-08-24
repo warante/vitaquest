@@ -49,3 +49,4 @@ Lee AGENTS.md y la documentación de docs/. Implementa la siguiente tarea del ro
 - [Arquitectura](docs/ARCHITECTURE.md)
 - [Decisiones](docs/DECISIONS.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Operaciones](docs/OPS.md)
