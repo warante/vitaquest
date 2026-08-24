@@ -38,8 +38,7 @@ Cuando se supera el límite se responde `429` con cabecera `Retry-After`.
 
 `pnpm backup` ejecuta `scripts/backup-db.mjs`, que crea una copia con marca de tiempo en `backups/` y conserva los últimos 14 (configurable con `BACKUP_KEEP`).
 
-- **SQLite (desarrollo actual)**: copia el archivo `vitaquest.db`.
-- **PostgreSQL (Railway)**: si `DATABASE_URL` está definido, ejecuta `pg_dump --no-owner --clean`. Requiere el binario `pg_dump` disponible.
+- **PostgreSQL**: con `DATABASE_URL` definido, ejecuta `pg_dump --no-owner --clean`. Requiere el binario `pg_dump` disponible.
 
 Estrategia recomendada en Railway:
 
@@ -76,5 +75,5 @@ Recomendaciones:
 
 - `VITAQUEST_ACCESS_KEY`, `VITAQUEST_PROFILE_ID`, `VITAQUEST_DISPLAY_NAME`.
 - `VITAQUEST_AI_API_KEY` y `VITAQUEST_AI_MODEL` (para la función inteligente).
-- `DATABASE_URL` (solo en Railway/PostgreSQL).
+- `DATABASE_URL` (PostgreSQL, en todos los entornos).
 - `RAILWAY_TOKEN` (solo en el repositorio, para el workflow de despliegue).

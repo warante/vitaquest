@@ -180,6 +180,18 @@ Se implementa la Fase 12 con las siguientes decisiones:
 
 **Motivo**: dotar al producto de infraestructura mínima sin crear/enlazar recursos remotos (que requieren confirmación explícita) ni añadir dependencias.
 
+## 2026-08-24: PostgreSQL único (fin de la persistencia dual)
+
+Se abandona la persistencia dual (SQLite en local, PostgreSQL en Railway). La aplicación usa PostgreSQL en todos los entornos.
+
+- `db/schema.ts` pasa de `sqliteTable` a `pgTable`; `db/client.ts` usa `drizzle-orm/postgres-js` con `postgres`.
+- `drizzle.config.ts` pasa a `dialect: "postgresql"`; las migraciones SQLite se sustituyen por migraciones PostgreSQL.
+- Se eliminan las dependencias `sql.js`, `@types/sql.js` y `@types/better-sqlite3`.
+- `DATABASE_URL` pasa a ser obligatoria en todos los entornos. Sin ella las rutas responden `503`.
+- El desarrollo local usa PostgreSQL: con `railway run pnpm dev` (túnel al Postgres de Railway) o con un Postgres local (Docker).
+
+**Motivo**: preparar el despliegue remoto en Railway con PostgreSQL (decisión 2026-08-22). Mantener dos dialectos en paralelo duplicaba el esquema y las migraciones sin aportar valor a una app personal. Reemplaza la nota de "persistencia dual" (2026-08-23).
+
 ## Cómo añadir una decisión
 
 Usa la fecha, el contexto, la decisión y el motivo. Si una decisión queda obsoleta, no la borres: añade una nueva entrada que la reemplace.

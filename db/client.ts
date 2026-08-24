@@ -1,7 +1,5 @@
-import * as fs from "node:fs"
-import * as path from "node:path"
-import { drizzle } from "drizzle-orm/sql-js"
-import initSqlJs, { type BindParams, type Database as SqlJsDatabase } from "sql.js"
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
 import * as schema from "./schema"
 
 export class DatabaseConfigurationError extends Error {
@@ -13,58 +11,27 @@ export class DatabaseConfigurationError extends Error {
 
 export type AppDatabase = ReturnType<typeof drizzle<typeof schema>>
 
-const DB_FILE = path.join(process.cwd(), "vitaquest.db")
-
-const WRITE_RE = /^\s*(INSERT|UPDATE|DELETE|REPLACE|CREATE|DROP|ALTER)\b/i
-
-let sqlPromise: Promise<Awaited<ReturnType<typeof initSqlJs>>> | null = null
 let dbInstance: AppDatabase | null = null
-
-function persist(db: SqlJsDatabase): void {
-  fs.writeFileSync(DB_FILE, Buffer.from(db.export()))
-}
-
-function createPersistentDatabase(db: SqlJsDatabase): SqlJsDatabase {
-  const originalPrepare = db.prepare.bind(db)
-  db.prepare = (sql: string) => {
-    const statement = originalPrepare(sql)
-    if (WRITE_RE.test(sql)) {
-      const originalRun = statement.run.bind(statement)
-      statement.run = (params?: BindParams) => {
-        const result = originalRun(params)
-        persist(db)
-        return result
-      }
-    }
-    return statement
-  }
-  return db
-}
 
 export async function getDatabase(): Promise<AppDatabase> {
   if (dbInstance) return dbInstance
 
+  // biome-ignore lint/complexity/useLiteralKeys: ProcessEnv requires indexed access in strict TypeScript.
+  const connectionString = process.env["DATABASE_URL"]
+  if (!connectionString) {
+    throw new DatabaseConfigurationError(
+      "DATABASE_URL no está configurado. Define la URL de PostgreSQL para usar persistencia.",
+    )
+  }
+
   try {
-    if (!sqlPromise) {
-      sqlPromise = initSqlJs({
-        locateFile: (file) => path.join(process.cwd(), "node_modules", "sql.js", "dist", file),
-      })
-    }
-
-    const SQL = await sqlPromise
-    let db: SqlJsDatabase
-    if (fs.existsSync(DB_FILE)) {
-      db = new SQL.Database(fs.readFileSync(DB_FILE))
-    } else {
-      db = new SQL.Database()
-    }
-
-    dbInstance = drizzle(createPersistentDatabase(db), { schema })
+    const client = postgres(connectionString, { max: 1, prepare: false })
+    dbInstance = drizzle(client, { schema })
     return dbInstance
   } catch (error) {
-    console.error("[vitaquest-db] error al inicializar SQLite:", error)
+    console.error("[vitaquest-db] error al inicializar PostgreSQL:", error)
     throw new DatabaseConfigurationError(
-      "No se pudo inicializar la base de datos SQLite. Verifica que sql.js esté instalado.",
+      "No se pudo inicializar la conexión a PostgreSQL. Verifica DATABASE_URL.",
     )
   }
 }

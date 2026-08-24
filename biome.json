@@ -17,5 +17,5 @@
   "javascript": {
     "formatter": { "quoteStyle": "double", "semicolons": "asNeeded" }
   },
-  "files": { "includes": ["**", "!node_modules", "!.next", "!dist", "!coverage"] }
+  "files": { "includes": ["**", "!node_modules", "!.next", "!dist", "!coverage", "!drizzle"] }
 }

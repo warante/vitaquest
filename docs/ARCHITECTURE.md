@@ -5,7 +5,7 @@
 - Next.js con App Router para una aplicación full-stack sencilla.
 - React y TypeScript estricto.
 - CSS propio en la primera iteración para mantener el producto ligero.
-- PostgreSQL gestionado por Railway cuando llegue la persistencia.
+- PostgreSQL en todos los entornos; en producción, gestionado por Railway.
 - Drizzle como ORM previsto para la capa de datos.
 - Railway como plataforma de despliegue.
 
@@ -19,7 +19,7 @@ drizzle/             migraciones de PostgreSQL
 docs/                contexto persistente del proyecto
 ```
 
-La fase 2 ya define `db/` y la migración inicial. La base de datos remota queda pendiente de enlazar a un proyecto Railway confirmado.
+La fase 2 define `db/` y la migración inicial. La capa de datos usa Drizzle con PostgreSQL en todos los entornos (ver `docs/DECISIONS.md`, 2026-08-24).
 
 ## Datos iniciales previstos
 
@@ -36,7 +36,7 @@ La fase 2 ya define `db/` y la migración inicial. La base de datos remota queda
 - `daily_records` y `daily_actions` guardan el resumen diario y el detalle de acciones.
 - `meals`, `workouts` y `lab_records` permiten registrar los datos introducidos manualmente.
 - Las rutas `/api/daily-records`, `/api/meals`, `/api/workouts` y `/api/labs` validan entradas con Zod y escriben mediante Drizzle.
-- `DATABASE_URL` se lee solo en tiempo de ejecución; sin ella las rutas responden `503` y la interfaz local sigue funcionando.
+- `DATABASE_URL` es obligatoria en todos los entornos; sin ella las rutas responden `503`.
 
 ## Despliegue
 

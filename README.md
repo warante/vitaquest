@@ -6,14 +6,18 @@ La primera entrega incluye un panel inicial navegable y la base técnica para de
 
 ## Inicio local
 
-Requisitos: Node.js 20+ y pnpm 9+.
+Requisitos: Node.js 20+, pnpm 9+ y PostgreSQL (la persistencia es PostgreSQL en todos los entornos).
 
 ```bash
 pnpm install
+cp .env.example .env.local   # rellena DATABASE_URL y el resto de variables
+pnpm db:migrate              # crea las tablas
 pnpm dev
 ```
 
 Abre `http://localhost:3000`.
+
+Si no tienes un PostgreSQL local, puedes apuntar al de Railway con `railway run pnpm dev` (ejecuta en local con las variables del servicio remoto).
 
 ## Validación
 

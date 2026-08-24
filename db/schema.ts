@@ -1,6 +1,14 @@
-import { integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import {
+  boolean,
+  doublePrecision,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core"
 
-export const profiles = sqliteTable("profiles", {
+export const profiles = pgTable("profiles", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -13,15 +21,15 @@ export const profiles = sqliteTable("profiles", {
   strengthGoal: integer("strength_goal").default(3).notNull(),
   cardioGoal: integer("cardio_goal").default(150).notNull(),
   walksGoal: integer("walks_goal").default(10).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
 })
 
-export const dailyRecords = sqliteTable(
+export const dailyRecords = pgTable(
   "daily_records",
   {
     id: text("id")
@@ -35,17 +43,17 @@ export const dailyRecords = sqliteTable(
     totalActions: integer("total_actions").default(0).notNull(),
     xp: integer("xp").default(0).notNull(),
     streakDays: integer("streak_days").default(0).notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" })
+    createdAt: timestamp("created_at", { withTimezone: true })
       .$defaultFn(() => new Date())
       .notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp" })
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .$defaultFn(() => new Date())
       .notNull(),
   },
   (table) => [uniqueIndex("daily_records_profile_date_idx").on(table.profileId, table.recordDate)],
 )
 
-export const dailyActions = sqliteTable(
+export const dailyActions = pgTable(
   "daily_actions",
   {
     id: text("id")
@@ -58,13 +66,13 @@ export const dailyActions = sqliteTable(
     label: text("label").notNull(),
     detail: text("detail").notNull(),
     icon: text("icon").notNull(),
-    completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
-    completedAt: integer("completed_at", { mode: "timestamp" }),
+    completed: boolean("completed").default(false).notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (table) => [uniqueIndex("daily_actions_record_slug_idx").on(table.recordId, table.slug)],
 )
 
-export const meals = sqliteTable("meals", {
+export const meals = pgTable("meals", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -75,12 +83,12 @@ export const meals = sqliteTable("meals", {
   mealType: text("meal_type").notNull(),
   name: text("name").notNull(),
   notes: text("notes"),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
 })
 
-export const workouts = sqliteTable("workouts", {
+export const workouts = pgTable("workouts", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -91,12 +99,12 @@ export const workouts = sqliteTable("workouts", {
   activity: text("activity").notNull(),
   minutes: integer("minutes").notNull(),
   notes: text("notes"),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
 })
 
-export const labRecords = sqliteTable("lab_records", {
+export const labRecords = pgTable("lab_records", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -105,16 +113,16 @@ export const labRecords = sqliteTable("lab_records", {
     .references(() => profiles.id, { onDelete: "cascade" }),
   measuredAt: text("measured_at").notNull(),
   marker: text("marker").notNull(),
-  value: real("value").notNull(),
+  value: doublePrecision("value").notNull(),
   unit: text("unit").notNull(),
   referenceRange: text("reference_range"),
   notes: text("notes"),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
 })
 
-export const challenges = sqliteTable("challenges", {
+export const challenges = pgTable("challenges", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -124,13 +132,13 @@ export const challenges = sqliteTable("challenges", {
   slug: text("slug"),
   title: text("title").notNull(),
   detail: text("detail"),
-  completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  completed: boolean("completed").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
 })
 
-export const trainingSessions = sqliteTable("training_sessions", {
+export const trainingSessions = pgTable("training_sessions", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -143,12 +151,12 @@ export const trainingSessions = sqliteTable("training_sessions", {
   rpe: integer("rpe"),
   feeling: text("feeling"),
   notes: text("notes"),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
 })
 
-export const exerciseEntries = sqliteTable("exercise_entries", {
+export const exerciseEntries = pgTable("exercise_entries", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -160,7 +168,7 @@ export const exerciseEntries = sqliteTable("exercise_entries", {
   notes: text("notes"),
 })
 
-export const exerciseSets = sqliteTable("exercise_sets", {
+export const exerciseSets = pgTable("exercise_sets", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -169,9 +177,9 @@ export const exerciseSets = sqliteTable("exercise_sets", {
     .references(() => exerciseEntries.id, { onDelete: "cascade" }),
   setNumber: integer("set_number").notNull(),
   reps: integer("reps").notNull(),
-  weight: real("weight"),
+  weight: doublePrecision("weight"),
   weightUnit: text("weight_unit").default("kg").notNull(),
-  completed: integer("completed", { mode: "boolean" }).default(true).notNull(),
+  completed: boolean("completed").default(true).notNull(),
   rpe: integer("rpe"),
 })
 

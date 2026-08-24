@@ -3,8 +3,9 @@ import type { Config } from "drizzle-kit"
 export default {
   schema: "./db/schema.ts",
   out: "./drizzle",
-  dialect: "sqlite",
+  dialect: "postgresql",
   dbCredentials: {
-    url: "./vitaquest.db",
+    // biome-ignore lint/complexity/useLiteralKeys: ProcessEnv requires indexed access in strict TypeScript.
+    url: process.env["DATABASE_URL"] ?? "",
   },
 } satisfies Config
