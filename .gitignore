@@ -11,3 +11,5 @@ pnpm-debug.log*
 *.tsbuildinfo
 qa-server*.log
 qa-prod*.log
+vitaquest.db
+backups/

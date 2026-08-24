@@ -5,6 +5,7 @@ import {
   calculateXp,
   type DailyRecord,
   getBadgeForStreak,
+  streakXpMultiplier,
   summarizeWeek,
 } from "./gamification"
 
@@ -84,5 +85,14 @@ describe("gamification rules", () => {
       totalActions: 20,
       bestDate: "2026-08-18",
     })
+  })
+
+  test("scales the XP multiplier with the streak length", () => {
+    expect(streakXpMultiplier(0)).toBe(1)
+    expect(streakXpMultiplier(3)).toBe(1)
+    expect(streakXpMultiplier(4)).toBe(1.2)
+    expect(streakXpMultiplier(8)).toBe(1.5)
+    expect(streakXpMultiplier(15)).toBe(2)
+    expect(streakXpMultiplier(30)).toBe(2.5)
   })
 })

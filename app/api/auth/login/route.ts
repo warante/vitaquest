@@ -6,12 +6,28 @@ import {
   createSessionToken,
   isValidAccessKey,
 } from "../../../auth"
+import { clientIp, consumeRateLimit } from "../../../rate-limit"
 
 export const runtime = "nodejs"
 
 const loginSchema = z.object({ accessKey: z.string().trim().min(1).max(200) })
 
+const LOGIN_RATE_LIMIT = 10
+const LOGIN_RATE_WINDOW_MS = 10 * 60 * 1000
+
 export async function POST(request: Request): Promise<NextResponse> {
+  const rate = consumeRateLimit(
+    `login:${clientIp(request)}`,
+    LOGIN_RATE_LIMIT,
+    LOGIN_RATE_WINDOW_MS,
+  )
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera unos minutos." },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } },
+    )
+  }
+
   try {
     const { accessKey } = loginSchema.parse(await request.json())
     if (!(await isValidAccessKey(accessKey))) {

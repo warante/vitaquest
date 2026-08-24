@@ -49,3 +49,11 @@ Railway ejecutará la compilación de Next.js y arrancará el servidor con `pnpm
 - Minimizar los datos personales.
 - Añadir autenticación antes de exponer datos a más de un usuario.
 - Revisar exportación y borrado de datos antes de abrir el producto a terceros.
+- Cabeceras de seguridad y rate limiting configurados en `next.config.ts`, `middleware.ts` y `app/rate-limit.ts`.
+
+## DevOps e infraestructura
+
+- CI en `.github/workflows/ci.yml` (typecheck, lint, test, build) en cada push y PR.
+- Despliegue manual a `staging`/`production` en `.github/workflows/deploy.yml` (Railway CLI).
+- Copias de seguridad con `pnpm backup` (`scripts/backup-db.mjs`).
+- Detalles operativos (monitorización, staging, backups, secretos) en `docs/OPS.md`.

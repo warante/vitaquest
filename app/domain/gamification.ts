@@ -47,6 +47,14 @@ export function calculateXp(
   return actionXp + fullDayBonus + streakDays * STREAK_XP_PER_DAY
 }
 
+export function streakXpMultiplier(streakDays: number): number {
+  if (streakDays >= 30) return 2.5
+  if (streakDays >= 15) return 2
+  if (streakDays >= 8) return 1.5
+  if (streakDays >= 4) return 1.2
+  return 1
+}
+
 export function calculateStreak(records: readonly DailyRecord[], endDate: string): number {
   const recordsByDate = new Map(records.map((record) => [record.date, record]))
   let streak = 0
