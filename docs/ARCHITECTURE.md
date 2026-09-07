@@ -1,59 +1,62 @@
-# Arquitectura inicial
+# Arquitectura
 
 ## Stack
 
-- Next.js con App Router para una aplicación full-stack sencilla.
-- React y TypeScript estricto.
-- CSS propio en la primera iteración para mantener el producto ligero.
-- PostgreSQL en todos los entornos; en producción, gestionado por Railway.
-- Drizzle como ORM previsto para la capa de datos.
-- Railway como plataforma de despliegue.
+- Vite + React 19 para una SPA estática.
+- TypeScript estricto.
+- CSS propio (dark mode, verde esmeralda).
+- Dexie.js sobre IndexedDB para persistencia local en el dispositivo.
+- PWA con `vite-plugin-pwa` (service worker, manifest, offline).
+- GitHub Pages como plataforma de despliegue.
 
-## Capas previstas
+## Capas
 
 ```text
-app/                 interfaz y rutas HTTP de Next.js
-app/domain/          reglas de producto puras
-db/                  esquema, cliente y validación de persistencia
-drizzle/             migraciones de PostgreSQL
+src/                 interfaz y componente principal
+src/db/              esquema Dexie y operaciones CRUD
+src/domain/          reglas de producto puras (XP, rachas, insignias, etc.)
+src/charts.tsx       componentes de visualización (sparklines, calendario)
+src/format.ts        utilidades de formato
 docs/                contexto persistente del proyecto
 ```
 
-La fase 2 define `db/` y la migración inicial. La capa de datos usa Drizzle con PostgreSQL en todos los entornos (ver `docs/DECISIONS.md`, 2026-08-24).
+## Datos
 
-## Datos iniciales previstos
+La persistencia usa Dexie.js sobre IndexedDB. No hay servidor ni base de datos remota. Todos los datos viven en el dispositivo del usuario.
 
-- `UserProfile`: objetivos, preferencias y configuración.
-- `DailyAction`: acción planificada, estado, fecha y experiencia obtenida.
-- `MealPlanItem`: comida editable y sustituciones.
-- `WorkoutSession`: entrenamiento realizado.
-- `HealthMetric`: marcador, valor, unidad y fecha de medición.
-- `Achievement`: insignias desbloqueadas.
+Tablas:
+- `profile`: configuración y objetivos del usuario (registro único).
+- `dailyRecords`: resumen diario de acciones completadas.
+- `dailyActions`: detalle de acciones por día.
+- `meals`: comidas registradas por fecha.
+- `workouts`: actividad física registrada.
+- `labRecords`: analíticas y métricas de salud.
+- `challenges`: retos semanales y personalizados.
+- `trainingSessions`: sesiones de entrenamiento.
+- `exerciseEntries`: ejercicios dentro de cada sesión.
+- `exerciseSets`: series de cada ejercicio.
 
-## Persistencia de la fase 2
+## Importación y exportación
 
-- `profiles` representa el espacio personal de la primera instalación.
-- `daily_records` y `daily_actions` guardan el resumen diario y el detalle de acciones.
-- `meals`, `workouts` y `lab_records` permiten registrar los datos introducidos manualmente.
-- Las rutas `/api/daily-records`, `/api/meals`, `/api/workouts` y `/api/labs` validan entradas con Zod y escriben mediante Drizzle.
-- `DATABASE_URL` es obligatoria en todos los entornos; sin ella las rutas responden `503`.
+La app permite exportar todos los datos como JSON e importar una copia previa desde otro dispositivo. Esto sustituye la sincronización en la nube.
 
 ## Despliegue
 
-Railway ejecutará la compilación de Next.js y arrancará el servidor con `pnpm start`. `/api/health` sirve como comprobación de disponibilidad. La base de datos se añadirá como servicio PostgreSQL en el mismo proyecto Railway cuando el usuario confirme el proyecto de destino.
+GitHub Pages sirve los archivos estáticos generados por Vite. El workflow `.github/workflows/deploy-pages.yml` se ejecuta en cada push a `main`, compila la app y despliega el directorio `dist/`.
+
+## PWA
+
+La app es instalable en Android y otros dispositivos móviles. `vite-plugin-pwa` genera el service worker y el manifest automáticamente. El service worker cachea los assets estáticos para funcionamiento offline.
 
 ## Seguridad y privacidad
 
-- No guardar secretos en el repositorio.
-- Mantener `.env.example` sin valores reales.
-- Minimizar los datos personales.
-- Añadir autenticación antes de exponer datos a más de un usuario.
-- Revisar exportación y borrado de datos antes de abrir el producto a terceros.
-- Cabeceras de seguridad y rate limiting configurados en `next.config.ts`, `middleware.ts` y `app/rate-limit.ts`.
+- No hay servidor, no hay autenticación, no hay datos en la nube.
+- Todos los datos permanecen en el dispositivo del usuario.
+- No se recopilan datos personales fuera del dispositivo.
+- La exportación/importación JSON permite al usuario controlar sus datos.
 
-## DevOps e infraestructura
+## DevOps
 
-- CI en `.github/workflows/ci.yml` (typecheck, lint, test, build) en cada push y PR.
-- Despliegue manual a `staging`/`production` en `.github/workflows/deploy.yml` (Railway CLI).
-- Copias de seguridad con `pnpm backup` (`scripts/backup-db.mjs`).
-- Detalles operativos (monitorización, staging, backups, secretos) en `docs/OPS.md`.
+- CI: typecheck, lint y build en cada push.
+- Deploy automático a GitHub Pages desde `main`.
+- Biome para lint y formato.

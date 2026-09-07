@@ -23,11 +23,11 @@ VitaQuest es una aplicación personal de hábitos de salud, alimentación, entre
 ```text
 pnpm dev       # desarrollo local
 pnpm build     # compilación de producción
-pnpm start     # servidor de producción
+pnpm preview   # previsualizar build de producción
 pnpm typecheck # comprobación estricta de TypeScript
 pnpm lint      # Biome
 ```
 
 ## Despliegue
 
-La aplicación está preparada para Railway. El flujo previsto está documentado en `README.md`; no se debe crear ni enlazar un proyecto remoto sin confirmación explícita del usuario.
+La aplicación se despliega en GitHub Pages mediante GitHub Actions. El workflow `.github/workflows/deploy-pages.yml` compila y despliega automáticamente en cada push a `main`.
