@@ -1,23 +1,19 @@
 # VitaQuest
 
-VitaQuest es una aplicación personal para convertir objetivos de salud en acciones diarias visibles: hábitos, comidas, entrenamiento, progreso, analíticas y recompensas.
+VitaQuest es una PWA personal para convertir objetivos de salud en acciones diarias visibles: hábitos, comidas, entrenamiento, progreso, analíticas y recompensas.
 
-La primera entrega incluye un panel inicial navegable y la base técnica para desplegar en Railway. La persistencia, autenticación y el histórico real se incorporarán por fases.
+Los datos se almacenan localmente en el dispositivo mediante IndexedDB (Dexie.js). No hay servidor ni base de datos remota. La app es instalable en Android y funciona offline.
 
 ## Inicio local
 
-Requisitos: Node.js 20+, pnpm 9+ y PostgreSQL (la persistencia es PostgreSQL en todos los entornos).
+Requisitos: Node.js 20+, pnpm 9+.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # rellena DATABASE_URL y el resto de variables
-pnpm db:migrate              # crea las tablas
 pnpm dev
 ```
 
-Abre `http://localhost:3000`.
-
-Si no tienes un PostgreSQL local, puedes apuntar al de Railway con `railway run pnpm dev` (ejecuta en local con las variables del servicio remoto).
+Abre `http://localhost:5173`.
 
 ## Validación
 
@@ -27,25 +23,20 @@ pnpm lint
 pnpm build
 ```
 
-## Despliegue en Railway
+## Despliegue en GitHub Pages
 
-1. Crea un repositorio Git para esta carpeta y súbelo a GitHub.
-2. En Railway, crea un proyecto nuevo desde ese repositorio.
-3. Railway detectará Next.js y usará los scripts de `package.json`.
-4. Configura las variables de entorno siguiendo `.env.example` cuando añadamos persistencia.
-5. Verifica que el health check responde en `/api/health`.
+La app se despliega automáticamente en GitHub Pages mediante GitHub Actions. En cada push a `main`, el workflow `.github/workflows/deploy-pages.yml` compila y despliega el directorio `dist/`.
 
-Desde Codex, el despliegue autorizado se podrá hacer desde esta carpeta con `railway up`. Antes de ejecutarlo hay que confirmar el proyecto y el entorno de destino.
+Para activar:
+1. Ve a Settings > Pages del repositorio en GitHub.
+2. En "Source", selecciona "GitHub Actions".
+3. Haz push a `main` y el workflow se ejecutará automáticamente.
 
-## Cómo continuar con Codex sin perder contexto
+## Importar / Exportar datos
 
-Empieza cada sesión pidiendo a Codex que lea `AGENTS.md`, `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` y `docs/ROADMAP.md`. Después describe una única tarea concreta y pide que actualice `docs/DECISIONS.md` si cambia una decisión de producto o arquitectura.
-
-Ejemplo:
-
-```text
-Lee AGENTS.md y la documentación de docs/. Implementa la siguiente tarea del roadmap: guardar el primer hábito diario en PostgreSQL. Mantén el alcance, actualiza las decisiones si hace falta y valida tipos, lint y build.
-```
+Desde la pestaña **Ajustes** puedes:
+- **Exportar** todos tus datos como JSON (backup).
+- **Importar** un JSON previamente exportado (migración entre dispositivos).
 
 ## Documentación del proyecto
 
@@ -53,4 +44,3 @@ Lee AGENTS.md y la documentación de docs/. Implementa la siguiente tarea del ro
 - [Arquitectura](docs/ARCHITECTURE.md)
 - [Decisiones](docs/DECISIONS.md)
 - [Roadmap](docs/ROADMAP.md)
-- [Operaciones](docs/OPS.md)

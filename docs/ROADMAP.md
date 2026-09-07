@@ -114,3 +114,14 @@
 - [x] Headers de seguridad y rate limiting
 - [x] Entorno de staging
 - [x] Documentación técnica actualizada
+
+## Fase 13: Migración a local-first
+
+- [x] Migrar de Next.js a Vite + React SPA
+- [x] Reemplazar PostgreSQL/Drizzle con Dexie.js (IndexedDB)
+- [x] Eliminar API routes, autenticación y servidor
+- [x] Configurar PWA con vite-plugin-pwa
+- [x] Implementar import/export JSON completo de datos
+- [x] Configurar deploy a GitHub Pages con GitHub Actions
+- [x] Limpieza de código heredado (Drizzle, middleware, scripts de backup)
+- [x] Actualizar documentación técnica
