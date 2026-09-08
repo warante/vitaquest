@@ -26,7 +26,7 @@ import { evaluateAchievements } from "./domain/achievements"
 import { adaptiveChallengesFor } from "./domain/adaptive-challenges"
 import { chatCompletion, fetchRemoteModels } from "./domain/ai-client"
 import type { AiModelOption } from "./domain/ai-models"
-import { insightsUserPrompt, parseInsightsJson, systemPrompt } from "./domain/ai-prompts"
+import { chatUserPrompt, insightsUserPrompt, parseInsightsJson, systemPrompt } from "./domain/ai-prompts"
 import {
   computeCategoryStreaks,
   FIBER_ACTION_SLUGS,
@@ -423,6 +423,9 @@ export function App(): React.ReactElement {
   const [aiSaving, setAiSaving] = useState(false)
   const [aiSaved, setAiSaved] = useState(false)
   const [aiLoadingInsights, setAiLoadingInsights] = useState(false)
+  const [chatMessages, setChatMessages] = useState<readonly { role: "user" | "assistant"; content: string }[]>([])
+  const [chatInput, setChatInput] = useState("")
+  const [chatLoading, setChatLoading] = useState(false)
 
   const weekRecords = dashboard?.week ?? []
   const historyRecords = dashboard?.history ?? []
@@ -774,6 +777,28 @@ export function App(): React.ReactElement {
       )
     } finally {
       setAiLoadingInsights(false)
+    }
+  }
+
+  async function sendChatMessage(): Promise<void> {
+    const question = chatInput.trim()
+    if (!question || chatLoading || !aiEnabled || !aiEndpoint.trim() || !aiModel) return
+    const snapshot = buildHealthSnapshot()
+    if (!snapshot) return
+    const userMessage = { role: "user" as const, content: question }
+    setChatMessages((prev) => [...prev, userMessage])
+    setChatInput("")
+    setChatLoading(true)
+    try {
+      const response = await chatCompletion(aiEndpoint, aiApiKey, aiModel, [
+        { role: "system", content: systemPrompt() },
+        { role: "user", content: chatUserPrompt(snapshot, question) },
+      ])
+      setChatMessages((prev) => [...prev, { role: "assistant", content: response }])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo responder a la pregunta.")
+    } finally {
+      setChatLoading(false)
     }
   }
 
@@ -1989,6 +2014,107 @@ export function App(): React.ReactElement {
                   </div>
                 )}
               </div>
+              {aiEnabled && aiEndpoint.trim() && aiModel ? (
+                <div className="coach-chat" style={{ marginTop: "24px" }}>
+                  <div className="coach-block-header">
+                    <h3>Pregúntale al coach</h3>
+                  </div>
+                  {chatMessages.length > 0 && (
+                    <div
+                      className="chat-messages"
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                        marginBottom: "16px",
+                        maxHeight: "400px",
+                        overflowY: "auto",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        background: "var(--color-surface-alt, #1a1f2e)",
+                      }}
+                    >
+                      {chatMessages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            padding: "10px 14px",
+                            borderRadius: "12px",
+                            maxWidth: "85%",
+                            alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                            background:
+                              msg.role === "user"
+                                ? "var(--color-primary, #2d6a4f)"
+                                : "var(--color-surface, #252b3b)",
+                            color:
+                              msg.role === "user"
+                                ? "var(--color-on-primary, #fff)"
+                                : "var(--color-text, #e4e4e7)",
+                          }}
+                        >
+                          <div style={{ whiteSpace: "pre-wrap", fontSize: "0.9rem" }}>
+                            {msg.content}
+                          </div>
+                        </div>
+                      ))}
+                      {chatLoading && (
+                        <div
+                          style={{
+                            padding: "10px 14px",
+                            borderRadius: "12px",
+                            maxWidth: "85%",
+                            alignSelf: "flex-start",
+                            background: "var(--color-surface, #252b3b)",
+                            color: "var(--color-text-muted, #9ca3af)",
+                          }}
+                        >
+                          Pensando…
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <textarea
+                      placeholder="Escribe tu pregunta…"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault()
+                          void sendChatMessage()
+                        }
+                      }}
+                      rows={2}
+                      style={{
+                        flex: 1,
+                        padding: "10px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid var(--color-border, #374151)",
+                        background: "var(--color-surface, #252b3b)",
+                        color: "var(--color-text, #e4e4e7)",
+                        resize: "vertical",
+                        fontFamily: "inherit",
+                        fontSize: "0.9rem",
+                      }}
+                    />
+                    <button
+                      className="btn-primary"
+                      type="button"
+                      onClick={() => void sendChatMessage()}
+                      disabled={chatLoading || !chatInput.trim()}
+                      style={{ height: "42px" }}
+                    >
+                      {chatLoading ? "…" : "Enviar"}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </section>
           </div>
         )}
