@@ -111,6 +111,11 @@ export interface ExerciseSetRow {
   rpe: number | null
 }
 
+export interface SettingRow {
+  key: string
+  value: string
+}
+
 export class VitaQuestDB extends Dexie {
   profile!: Table<ProfileRow>
   dailyRecords!: Table<DailyRecordRow>
@@ -122,6 +127,7 @@ export class VitaQuestDB extends Dexie {
   trainingSessions!: Table<TrainingSessionRow>
   exerciseEntries!: Table<ExerciseEntryRow>
   exerciseSets!: Table<ExerciseSetRow>
+  settings!: Table<SettingRow>
 
   constructor() {
     super("vitaquest")
@@ -136,6 +142,7 @@ export class VitaQuestDB extends Dexie {
       trainingSessions: "id, profileId, sessionDate",
       exerciseEntries: "id, sessionId",
       exerciseSets: "id, entryId",
+      settings: "key",
     })
   }
 }

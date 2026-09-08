@@ -8,6 +8,7 @@ import {
   deleteDailyRecordsForWeek,
   exportAllData,
   getAllDailyRecords,
+  getAiSettings,
   getChallenges,
   getDailyActionsForRecord,
   getLabRecords,
@@ -15,6 +16,7 @@ import {
   getOrInitProfile,
   getTrainingSessions,
   importAllData,
+  saveAiSettings,
   updateChallenge,
   updateDailyActions,
   updateProfileGoals,
@@ -22,7 +24,9 @@ import {
 } from "./db/actions"
 import { evaluateAchievements } from "./domain/achievements"
 import { adaptiveChallengesFor } from "./domain/adaptive-challenges"
-import { aiModelOptions, DEFAULT_AI_MODEL } from "./domain/ai-models"
+import { chatCompletion, fetchRemoteModels } from "./domain/ai-client"
+import type { AiModelOption } from "./domain/ai-models"
+import { insightsUserPrompt, parseInsightsJson, systemPrompt } from "./domain/ai-prompts"
 import {
   computeCategoryStreaks,
   FIBER_ACTION_SLUGS,
@@ -408,8 +412,17 @@ export function App(): React.ReactElement {
     },
   ])
   const [savingSession, setSavingSession] = useState(false)
-  const [insights] = useState<readonly InsightItem[]>([])
-  const [aiModel, setAiModel] = useState<string>(DEFAULT_AI_MODEL)
+  const [insights, setInsights] = useState<readonly InsightItem[]>([])
+  const [aiEndpoint, setAiEndpoint] = useState("")
+  const [aiApiKey, setAiApiKey] = useState("")
+  const [aiEnabled, setAiEnabled] = useState(false)
+  const [aiModel, setAiModel] = useState("")
+  const [aiModels, setAiModels] = useState<readonly AiModelOption[]>([])
+  const [aiTesting, setAiTesting] = useState(false)
+  const [aiTestResult, setAiTestResult] = useState<string | null>(null)
+  const [aiSaving, setAiSaving] = useState(false)
+  const [aiSaved, setAiSaved] = useState(false)
+  const [aiLoadingInsights, setAiLoadingInsights] = useState(false)
 
   const weekRecords = dashboard?.week ?? []
   const historyRecords = dashboard?.history ?? []
@@ -649,6 +662,121 @@ export function App(): React.ReactElement {
     setGoals((current) => ({ ...current, [field]: Number.isNaN(value) ? 0 : value }))
   }
 
+  async function testAiConnection(): Promise<void> {
+    if (!aiEndpoint.trim()) {
+      setAiTestResult("Introduce una URL de endpoint válida.")
+      return
+    }
+    setAiTesting(true)
+    setAiTestResult(null)
+    try {
+      const remote = await fetchRemoteModels(aiEndpoint, aiApiKey)
+      const options = remote.map((m) => ({ value: m.id, label: m.label }))
+      setAiModels(options)
+      if (remote.length === 0) {
+        setAiTestResult("Conexión OK, pero el endpoint no devuelve modelos.")
+      } else {
+        setAiTestResult(`Conexión OK · ${remote.length} modelo(s) disponible(s).`)
+        if (!aiModel || !options.some((o) => o.value === aiModel)) {
+          setAiModel(options[0].value)
+        }
+      }
+    } catch (err) {
+      setAiTestResult(
+        err instanceof Error ? err.message : "No se pudo conectar con el endpoint.",
+      )
+    } finally {
+      setAiTesting(false)
+    }
+  }
+
+  async function saveAiConfig(): Promise<void> {
+    setAiSaving(true)
+    setAiSaved(false)
+    try {
+      await saveAiSettings({
+        endpoint: aiEndpoint.trim(),
+        apiKey: aiApiKey,
+        enabled: aiEnabled,
+        model: aiModel,
+      })
+      setAiSaved(true)
+    } catch {
+      setError("No se pudo guardar la configuración de IA.")
+    } finally {
+      setAiSaving(false)
+    }
+  }
+
+  function buildHealthSnapshot() {
+    if (!dashboard) return null
+    const weekTotal = weekRecords.reduce((sum, d) => sum + d.totalActions, 0)
+    const weekCompleted = weekRecords.reduce((sum, d) => sum + d.completedActions, 0)
+    const now = new Date()
+    const mondayOffset = (now.getUTCDay() + 6) % 7
+    const monday = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - mondayOffset),
+    )
+    const sunday = new Date(monday)
+    sunday.setUTCDate(sunday.getUTCDate() + 6)
+    const weekStart = monday.toISOString().slice(0, 10)
+    const weekEnd = sunday.toISOString().slice(0, 10)
+    const sessionsWeek = sessions.filter((s) => s.sessionDate >= weekStart && s.sessionDate <= weekEnd).length
+    const strengthWeek = sessions.filter(
+      (s) => s.sessionDate >= weekStart && s.sessionDate <= weekEnd && s.workoutType === "strength",
+    ).length
+    const cardioWeek = sessions.filter(
+      (s) => s.sessionDate >= weekStart && s.sessionDate <= weekEnd && s.workoutType !== "strength",
+    ).length
+    const rpeValues = sessions.filter((s) => s.rpe !== null).map((s) => s.rpe as number)
+    const avgRpe =
+      rpeValues.length > 0 ? rpeValues.reduce((a, b) => a + b, 0) / rpeValues.length : null
+    return {
+      week: {
+        averageCompletion: weekTotal > 0 ? Math.round((weekCompleted / weekTotal) * 100) : 0,
+        completedActions: weekCompleted,
+        totalActions: weekTotal,
+      },
+      streakDays,
+      sessionsWeek,
+      strengthSessionsWeek: strengthWeek,
+      cardioSessionsWeek: cardioWeek,
+      avgRpe,
+      goals: {
+        strengthGoal: dashboard.profile.goals.strengthGoal,
+        cardioGoal: dashboard.profile.goals.cardioGoal,
+      },
+      metrics: [],
+    }
+  }
+
+  async function generateAiInsights(): Promise<void> {
+    if (!aiEnabled || !aiEndpoint.trim() || !aiModel) return
+    const snapshot = buildHealthSnapshot()
+    if (!snapshot) return
+    setAiLoadingInsights(true)
+    try {
+      const response = await chatCompletion(aiEndpoint, aiApiKey, aiModel, [
+        { role: "system", content: systemPrompt() },
+        { role: "user", content: insightsUserPrompt(snapshot) },
+      ])
+      const parsed = parseInsightsJson(response)
+      setInsights(
+        parsed.map((item) => ({
+          title: item.title,
+          detail: item.detail,
+          tone: "neutral" as const,
+        })),
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudieron generar los insights.",
+      )
+    } finally {
+      setAiLoadingInsights(false)
+    }
+  }
+
   function mealNameFor(type: MealType): string {
     return meals.find((m) => m.mealType === type)?.name ?? defaultMeals[type]
   }
@@ -739,8 +867,25 @@ export function App(): React.ReactElement {
   }, [loadSessions])
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("vitaquest:ai:model")
-    if (stored && aiModelOptions.some((o) => o.value === stored)) setAiModel(stored)
+    void (async () => {
+      const settings = await getAiSettings()
+      setAiEndpoint(settings.endpoint)
+      setAiApiKey(settings.apiKey)
+      setAiEnabled(settings.enabled)
+      setAiModel(settings.model)
+      if (settings.endpoint.trim()) {
+        try {
+          const remote = await fetchRemoteModels(settings.endpoint, settings.apiKey)
+          const options = remote.map((m) => ({ value: m.id, label: m.label }))
+          setAiModels(options)
+          if (!settings.model && options.length > 0) {
+            setAiModel(options[0].value)
+          }
+        } catch {
+          /* endpoint not reachable yet */
+        }
+      }
+    })()
   }, [])
 
   async function addChallenge(): Promise<void> {
@@ -1795,8 +1940,27 @@ export function App(): React.ReactElement {
                 </div>
               </div>
               <div className="coach-source-note">
-                Generado con reglas locales · {HEALTH_DISCLAIMER}
+                {aiEnabled && aiEndpoint.trim()
+                  ? `Generado por IA · ${aiModel || "modelo sin configurar"}`
+                  : "Generado con reglas locales"}{" "}
+                · {HEALTH_DISCLAIMER}
               </div>
+              {aiEnabled && aiEndpoint.trim() ? (
+                <div className="settings-actions" style={{ marginBottom: "16px" }}>
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    onClick={() => void generateAiInsights()}
+                    disabled={aiLoadingInsights || !aiModel}
+                  >
+                    {aiLoadingInsights
+                      ? "Generando insights…"
+                      : aiModel
+                        ? "Generar insights con IA"
+                        : "Configura un modelo en Ajustes"}
+                  </button>
+                </div>
+              ) : null}
               <div className="coach-insights">
                 <div className="coach-block-header">
                   <h3>Insights de la semana</h3>
@@ -1806,8 +1970,9 @@ export function App(): React.ReactElement {
                     <div className="empty-state-icon">✦</div>
                     <h3>Sin insights todavía</h3>
                     <p>
-                      Registra misiones, entrenamientos y analíticas para que el coach tenga datos
-                      que analizar.
+                      {aiEnabled && aiEndpoint.trim()
+                        ? "Pulsa «Generar insights con IA» para analizar tus datos."
+                        : "Activa la IA en Ajustes o registra misiones, entrenamientos y analíticas para que el coach tenga datos que analizar."}
                     </p>
                   </div>
                 ) : (
@@ -1933,25 +2098,56 @@ export function App(): React.ReactElement {
               <div className="settings-form" style={{ marginTop: "32px" }}>
                 <h3>Función inteligente (IA)</h3>
                 <p>
-                  El coach usa un modelo compatible con OpenAI. Tus datos se tratan como información
-                  de salud y la IA nunca da diagnósticos.
+                  Configura tu propio endpoint compatible con OpenAI. La API key y el endpoint se
+                  guardan solo en tu dispositivo y nunca se comparten.
                 </p>
                 <div className="settings-grid">
+                  <div className="setting-field" style={{ gridColumn: "1 / -1" }}>
+                    <label htmlFor="ai-enabled">Activar IA</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        id="ai-enabled"
+                        type="checkbox"
+                        checked={aiEnabled}
+                        onChange={(e) => setAiEnabled(e.target.checked)}
+                        style={{ width: "auto" }}
+                      />
+                      <span>Usar IA para el coach de salud</span>
+                    </div>
+                  </div>
+                  <div className="setting-field" style={{ gridColumn: "1 / -1" }}>
+                    <label htmlFor="ai-endpoint">URL del endpoint</label>
+                    <input
+                      id="ai-endpoint"
+                      type="url"
+                      placeholder="https://tu-servidor.example.com"
+                      value={aiEndpoint}
+                      onChange={(e) => setAiEndpoint(e.target.value)}
+                    />
+                  </div>
+                  <div className="setting-field" style={{ gridColumn: "1 / -1" }}>
+                    <label htmlFor="ai-apikey">API Key</label>
+                    <input
+                      id="ai-apikey"
+                      type="password"
+                      placeholder="sk-..."
+                      value={aiApiKey}
+                      onChange={(e) => setAiApiKey(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
                   <div className="setting-field">
                     <label htmlFor="ai-model">Modelo</label>
                     <select
                       id="ai-model"
                       value={aiModel}
-                      onChange={(e) => {
-                        setAiModel(e.target.value)
-                        try {
-                          window.localStorage.setItem("vitaquest:ai:model", e.target.value)
-                        } catch {
-                          /* ignore */
-                        }
-                      }}
+                      onChange={(e) => setAiModel(e.target.value)}
+                      disabled={aiModels.length === 0}
                     >
-                      {aiModelOptions.map((o) => (
+                      {aiModels.length === 0 && (
+                        <option value="">Pulsa «Probar conexión» para cargar modelos</option>
+                      )}
+                      {aiModels.map((o) => (
                         <option key={o.value} value={o.value}>
                           {o.label}
                         </option>
@@ -1959,6 +2155,37 @@ export function App(): React.ReactElement {
                     </select>
                   </div>
                 </div>
+                <div className="settings-actions">
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => void testAiConnection()}
+                    disabled={aiTesting}
+                  >
+                    {aiTesting ? "Probando…" : "Probar conexión"}
+                  </button>
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    onClick={() => void saveAiConfig()}
+                    disabled={aiSaving}
+                  >
+                    {aiSaving ? "Guardando…" : "Guardar configuración"}
+                  </button>
+                </div>
+                {aiTestResult ? (
+                  <p
+                    className="settings-saved"
+                    style={{
+                      color: aiTestResult.startsWith("Conexión OK")
+                        ? "var(--color-success, #22c55e)"
+                        : undefined,
+                    }}
+                  >
+                    {aiTestResult}
+                  </p>
+                ) : null}
+                {aiSaved ? <p className="settings-saved">Configuración guardada.</p> : null}
                 <p className="ai-config-note">{HEALTH_DISCLAIMER}</p>
               </div>
             </section>

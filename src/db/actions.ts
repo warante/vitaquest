@@ -9,6 +9,7 @@ import {
   type MealRow,
   PROFILE_ID,
   type ProfileRow,
+  type SettingRow,
   type TrainingSessionRow,
 } from "./database"
 
@@ -291,6 +292,61 @@ export async function deleteDailyRecordsForWeek(dates: string[]): Promise<void> 
   }
 }
 
+export type AiSettings = Readonly<{
+  endpoint: string
+  apiKey: string
+  enabled: boolean
+  model: string
+}>
+
+const AI_KEYS = {
+  endpoint: "ai:endpoint",
+  apiKey: "ai:apiKey",
+  enabled: "ai:enabled",
+  model: "ai:model",
+} as const
+
+async function getSetting(key: string): Promise<string> {
+  const row = await db.settings.get(key)
+  return row?.value ?? ""
+}
+
+async function setSetting(key: string, value: string): Promise<void> {
+  await db.settings.put({ key, value })
+}
+
+export async function getAiSettings(): Promise<AiSettings> {
+  const [endpoint, apiKey, enabled, model] = await Promise.all([
+    getSetting(AI_KEYS.endpoint),
+    getSetting(AI_KEYS.apiKey),
+    getSetting(AI_KEYS.enabled),
+    getSetting(AI_KEYS.model),
+  ])
+  return { endpoint, apiKey, enabled: enabled === "true", model }
+}
+
+export async function saveAiSettings(settings: {
+  endpoint?: string
+  apiKey?: string
+  enabled?: boolean
+  model?: string
+}): Promise<void> {
+  const updates: Promise<void>[] = []
+  if (settings.endpoint !== undefined) updates.push(setSetting(AI_KEYS.endpoint, settings.endpoint))
+  if (settings.apiKey !== undefined) updates.push(setSetting(AI_KEYS.apiKey, settings.apiKey))
+  if (settings.enabled !== undefined)
+    updates.push(setSetting(AI_KEYS.enabled, settings.enabled ? "true" : "false"))
+  if (settings.model !== undefined) updates.push(setSetting(AI_KEYS.model, settings.model))
+  await Promise.all(updates)
+}
+
+export async function getAiSettingsRows(): Promise<SettingRow[]> {
+  return db.settings
+    .where("key")
+    .anyOf([AI_KEYS.endpoint, AI_KEYS.apiKey, AI_KEYS.enabled, AI_KEYS.model])
+    .toArray()
+}
+
 export async function exportAllData(): Promise<string> {
   const profile = await getOrInitProfile()
   const dailyRecords = await db.dailyRecords.where({ profileId: PROFILE_ID }).toArray()
@@ -303,9 +359,11 @@ export async function exportAllData(): Promise<string> {
   const exerciseEntries = await db.exerciseEntries.toArray()
   const exerciseSets = await db.exerciseSets.toArray()
 
+  const aiSettings = await getAiSettingsRows()
+
   const data = {
     exportedAt: new Date().toISOString(),
-    version: 2,
+    version: 3,
     profile,
     dailyRecords,
     dailyActions,
@@ -316,6 +374,7 @@ export async function exportAllData(): Promise<string> {
     trainingSessions,
     exerciseEntries,
     exerciseSets,
+    settings: aiSettings,
   }
   return JSON.stringify(data, null, 2)
 }
@@ -336,5 +395,6 @@ export async function importAllData(json: string): Promise<void> {
     if (data.trainingSessions) await db.trainingSessions.bulkAdd(data.trainingSessions)
     if (data.exerciseEntries) await db.exerciseEntries.bulkAdd(data.exerciseEntries)
     if (data.exerciseSets) await db.exerciseSets.bulkAdd(data.exerciseSets)
+    if (data.settings) await db.settings.bulkAdd(data.settings)
   })
 }
