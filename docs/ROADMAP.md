@@ -4,7 +4,7 @@
 
 - [x] Crear repositorio y contexto persistente.
 - [x] Crear panel inicial `Hoy`.
-- [x] Añadir health check para Railway.
+- [x] Añadir health check.
 - [x] Añadir configuración estricta y documentación de despliegue.
 
 ## Fase 1: experiencia local
@@ -16,7 +16,7 @@
 
 ## Fase 2: persistencia
 
-- [x] Crear PostgreSQL en Railway.
+- [x] Crear PostgreSQL.
 - [x] Definir esquema Drizzle y migraciones.
 - [x] Preparar endpoints para guardar acciones, comidas, entrenamientos y analíticas.
 - [x] Autenticación de acceso privado (uso personal; sin multi-usuario).
@@ -109,7 +109,7 @@
 ## Fase 12: DevOps e infraestructura
 
 - [x] CI/CD con GitHub Actions
-- [x] Backups automáticos de PostgreSQL (script SQLite/`pg_dump`; en Railway, backups nativos)
+- [x] Backups automáticos de PostgreSQL (script SQLite/`pg_dump`)
 - [x] Monitoring y alertas (UptimeRobot, documentado)
 - [x] Headers de seguridad y rate limiting
 - [x] Entorno de staging
