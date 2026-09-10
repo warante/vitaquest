@@ -628,7 +628,6 @@ export function App(): React.ReactElement {
     )
     try {
       await updateDailyActions(selectedDate, nextActions)
-      await loadDashboard()
     } catch {
       setError("No se pudo guardar el cambio.")
     } finally {
